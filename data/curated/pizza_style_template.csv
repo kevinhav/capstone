@@ -1,0 +1,5 @@
+recipe_id,style_label,recipe_name,source,source_type,flour_g,flour_type,flour_protein_pct,water_g,salt_g,commercial_yeast_g,yeast_type,starter_g,starter_hydration_pct,leavening_source,fat_g,fat_type,notes
+neapolitan_001,neapolitan,Illustrative Neapolitan,TBD,illustrative_placeholder,500,00 flour,12,310,14,0.75,fresh,0,,commercial_yeast,0,none,"Placeholder only - replace with a sourced formula before use"
+new_york_001,new_york,Illustrative NY Style,TBD,illustrative_placeholder,500,high_gluten,13.5,300,10,3,active_dry,0,,commercial_yeast,10,oil,"Placeholder only - replace with a sourced formula before use"
+neapolitan_sourdough_001,neapolitan,Illustrative Sourdough Neapolitan,TBD,illustrative_placeholder,450,bread flour,12.5,280,13,0,none,150,100,sourdough,0,none,"Illustrative sourdough case - starter flour/water folded in downstream via mass-balance convention; leavening_source flags it for the approximate yeast-equivalent treatment"
+,,,,,,,,,,,,,,,,,
