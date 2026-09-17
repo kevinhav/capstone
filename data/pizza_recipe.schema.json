@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pizza Recipe",
+  "description": "One curated recipe, in baker's-percentage form. Mirrors capstone.recipe.Recipe for the modeled fields, plus raw_text/mapping for provenance so every converted value can be traced back to the source.",
+  "type": "object",
+  "required": [
+    "recipe_id", "style", "source", "raw_text", "mapping",
+    "flour", "flour_type", "water", "salt", "yeast", "yeast_type",
+    "fat", "fat_type", "sugar", "sugar_type"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "field_mapping": {
+      "type": "object",
+      "description": "How one field's value was derived from raw_text.",
+      "required": ["raw", "method"],
+      "properties": {
+        "raw": {
+          "type": "string",
+          "description": "The exact snippet from raw_text this value came from, e.g. '922g Tipo 00 flour (100%)' or '2 teaspoons instant yeast'."
+        },
+        "method": {
+          "type": "string",
+          "description": "How raw was turned into the field's value - a Conversions method/table name (e.g. 'to_grams', 'to_baker_percentage', 'match_alias', 'split_starter', 'YEAST_TO_INSTANT_RATIO'), or 'manual' for a judgment call not covered by Conversions."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional - explain any exceptional or non-obvious decision (assumed default, ambiguous match, range midpoint taken, etc.)."
+        }
+      }
+    }
+  },
+  "properties": {
+    "recipe_id": { "type": "string" },
+    "style": { "type": "string", "enum": ["new-york", "neapolitan", "sicilian"] },
+    "source": { "type": "string", "description": "URL or citation for the original recipe." },
+    "raw_text": {
+      "type": "string",
+      "description": "Verbatim recipe text as it appears in the source .md file, unedited."
+    },
+    "mapping": {
+      "type": "object",
+      "description": "One field_mapping entry per converted field below, keyed by field name.",
+      "additionalProperties": false,
+      "properties": {
+        "flour": { "$ref": "#/$defs/field_mapping" },
+        "flour_type": { "$ref": "#/$defs/field_mapping" },
+        "water": { "$ref": "#/$defs/field_mapping" },
+        "salt": { "$ref": "#/$defs/field_mapping" },
+        "yeast": { "$ref": "#/$defs/field_mapping" },
+        "yeast_type": { "$ref": "#/$defs/field_mapping" },
+        "fat": { "$ref": "#/$defs/field_mapping" },
+        "fat_type": { "$ref": "#/$defs/field_mapping" },
+        "sugar": { "$ref": "#/$defs/field_mapping" },
+        "sugar_type": { "$ref": "#/$defs/field_mapping" }
+      }
+    },
+    "flour": { "type": "number", "const": 100.0, "description": "Baker's percentage basis - always 100." },
+    "flour_type": { "type": "string", "enum": ["all-purpose", "bread", "high-gluten", "double_zero", "semolina"] },
+    "water": { "type": "number" },
+    "salt": { "type": "number" },
+    "yeast": { "type": "number" },
+    "yeast_type": { "type": "string", "enum": ["active-dry", "instant", "fresh", "sourdough-starter"] },
+    "fat": { "type": "number" },
+    "fat_type": { "type": ["string", "null"], "enum": ["extra-virgin olive oil", "butter", "lard", "vegetable oil", null] },
+    "sugar": { "type": "number" },
+    "sugar_type": { "type": ["string", "null"], "enum": ["white", "brown", "honey", null] }
+  }
+}
