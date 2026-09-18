@@ -1,73 +1,184 @@
-# Project Proposal
+# CUNY MSDS Capstone Project Proposal
 
-## Summary
+Author: Kevin Havis
 
-Home bread and dough making has become a growing industry and area of interest for the consumer segment. Given the narrow focused set of ingredients, standard sets of techniques, and large array of possible outcomes, bread and dough recipes are well represented as formulas expressed as proportions of ingredients and parameterized techniques. This project will develop a recipe development tool intended for both home cooks and professionals to modify, develop, or adjust their bread and pizza dough recipes to achieve specified results. The project will curate a database of hand-selected, well-documented recipes, classify a user's recipe against specific subclasses such as "New York pizza dough" or "French baguette", and guide users to adjust their recipes towards a specific sub class.
+## Abstract
 
-## Industry Context
+This project will explore the ability to encode, classify, and optimize culinary recipes to achieve specific, well-defined culinary styles, a relatively unexplored space.
 
-Since COVID-19, consumer baking interest has dramatically surged. In March 2020, King Arthur, a company known for producing high quality consumer and commercial flour products, reported a 2,000% year-over-year growth in online flour sales.[^ka-2000] Over the full year, King Arthur sold 156 million pounds of flour, up 58% year-over-year,[^ka-58] and the brand has since become the #1 branded family flour in the United States by both dollars and units.[^ka-number-one] Companies like Ooni and Gozney that produce specialized outdoor pizza ovens, mixers, and other consumer baking accessories have seen staggering growth over a similar period; Ooni in particular is reported to have seen +300% sales growth in 2020, which quadrupled again in 2021.[^ooni] Gozney's audited UK filings show four consecutive years of compounding growth, from £12.9M turnover in FY2021 to £60.7M in FY2024.[^gozney]
+The project will pilot this approach with pizza recipes, due to the availability, popularity, well established culinary styles, and consistency of ingredients and process. 
 
-This trend has continued well into the last five years; Google searches for "sourdough" keywords have increased every year since an initial spike in 2020, and even becoming more specific, such as "sourghdough bagel" and "homemade sourdough bread".[^trends]
+I will generate a curated, labeled, and normalized dataset of expert recipes to establish style centroids, then compare supervised machine learning approaches. Finally, I will develop a constrained optimization approach to guide new formulations towards preferred culinary styles, encapsulating the project in a usable recipe formulation tool.
 
-## Simple Ingredients, Complex Technique
+## Problem Statement
 
-Baking leavened and unleavened bread is an ancient art, but modern bakers and recipes are developed around a baker's proportions style of recipe. Due to the small list of typical ingredients, many modern recipes simply express themselves in terms of ratios with regards to the total flour used.
+The culinary arts are a complex subject area and an interesting area of potential optimization. It is a difficult domain to model with data due to the many, hard-to-measure features, and it often does not present well as an optimization problem. Maximizing taste or texture is not a clear or straightforward task. As such, there is little applied data science to the domain.
 
-This gives us a very convenient way to write and scale recipes. It also gives us a way to consistently represent different bread recipes as vectors of ingredients and parameterized techniques.
+One sub-domain that lends itself well to normalized data representation is baking. Many baking recipes involve very few ingredients, as little as four in many cases - salt, water, flour, and yeast. Additionally, it is quite common to represent these (and any other ingredients) as "baker's percentages", as a percentage of the amount of flour used. Unfortunately, even these simple combinations results in many hundreds of possible outcomes based on other factors that are less readily available.
 
-Consider the two example recipes below for a baguette and Neopolitan Pizza Dough. The overlap in ingredients and technique is substantial, but we can see clear differences that make the end result so specific.
+To address this, I propose to use pizza dough formulations. Pizza is one of the most popular foods in the world, is accessible for many home cooks, and a readily available corpus of recipes. It also makes use of a small list of ingredients expressed in baker's percentages, and as such is an ideal candidate for a pilot study of culinary optimization. Optimization, in this case, will refer to the aligning of a formulation to well-known and desirable styles, such as "New York Style", "Neopolitan", or "Sicillian".
 
-_Placeholder_
+The core question the project will answer is, *can a low dimensional, domain-informed representation of dough formulations distinguish well-defined pizza styles sufficiently to enable recipe adjust recommendations and optimizations?*
+
+To this end, the project will cover data representations, classification, similarity scoring, and constrained optimization algorithms.
+
+## Data
+
+Labeled pizza formulations are not readily available as structured data. The project will contribute a small dataset of expert-curated recipes. By focusing on expert recipes, we can establish clear profiles of each pizza style against which to measure other formulations.
+
+We are deliberately deciding to ignore dough processing steps and other parameters as part of this initial scope.
+
+### Sourcing
+
+The dataset will be built by ethically sourcing a corpus of recipes from well known sources such as King Arthur Baking, Ooni, James-Beard award winning authors, and pizza-focused online forums. Scraping will be done manually, abide by site policies, and be credited in the final data.
+
+|Style|*n* Processed Recipes|
+|--|--|
+|Neopolitan|11 |
+|New York| 12|
+|Siciliian|9| 
+|**Total**| **32**|
+
+The recipes will be manually entered into a pre-defined data schema. Conversions and conventions for normalizing the ingredients will be defined, established, and followed to ensure consistency and standardization of the recipes. Only the "dough" section of the recipe will be extracted.
+
+```python
+# Example of normalized
+class YeastType(Enum):
+active_dry = "active-dry"
+instant = "instant"
+fresh = "fresh"
+sourdough_starter = "sourdough-starter"  # includes poolish
+
+YEAST_TYPE_ALIASES: dict[str, YeastType] = {
+    "instant": YeastType.instant,
+    "idy": YeastType.instant,
+    "rapid-rise": YeastType.instant,
+    "rapid rise": YeastType.instant,
+    "active dry": YeastType.active_dry,
+    "ady": YeastType.active_dry,
+    "fresh": YeastType.fresh,
+    "compressed": YeastType.fresh,
+    "cake yeast": YeastType.fresh,
+    "sourdough": YeastType.sourdough_starter,
+    "starter": YeastType.sourdough_starter,
+    "poolish": YeastType.sourdough_starter,
+    "culture": YeastType.sourdough_starter,
+    "mother yeast": YeastType.sourdough_starter,
+    "preferment": YeastType.sourdough_starter,
+    "other": YeastType.instant,  # fallback for unknown yeasts
+}
+```
 
 
-## Benefit
+### Processing
 
-The aforementioned companies have enjoyed significant growth by solving recipe consistency via equipment solutions, however very little research has been devoted to the recipe consistency and development. Common issues include imprecise volume measurements which can drift up to 33% depending on scooping technique,[^flour-measure] variance in home oven thermostats (90 degree variance unit-to-unit),[^oven-variance] and effects of regional humidity, air pressure, and ingredient processing / availability.[^altitude]
+The recipes will be labeled based on the recipe title, description, or other clearly labeled context, such as forum topics. We will limit the styles to "New York", "Neopolitan", and "Siciliian".
 
-The tool will benefit home cooks and professionals alike by allowing any "starting recipe" to be adjusted and scaled towards the user's target outcome. Instead of expensive and time-intensive trial and error, users will be able to simply adjust the recipe parameters to understand how it will affect the outcome of their product. The tool will encourage exploration and experimentation for experienced bakers, and a helpful guide and jumping-off point for novices to achieve good results. A parameterized approach also benefits a broad range of users with limited equipment, live in extreme areas of humidity, aridness, or altitude, or simply have less access to specialty ingredients.
+The steps to extract, convert, and normalize will be encoded along with the original raw text and output data for reproduceability and transparency. All conversions and mappings are explicitly defined in code.
 
-The end goal of the tool is to enable a more data-informed approach to baking, as opposed to pure trial and error.
+Below is an example of a recipe in the prescribed format.
 
+```json
+{
+"recipe_id": "neapolitan_001",
+"style": "neapolitan",
+"source": "https://www.seriouseats.com/basic-neapolitan-pizza-dough-recipe",
+"raw_text": "20 ounces (about 4 cups) bread flour, preferably Italian-style \"OO\"\n.4 ounces kosher salt (about 4 teaspoons)\n.3 ounces (about 2 teaspoons) instant yeast, such as SAF Instant Yeast\n13 ounces water",
+"mapping": {
+    "flour": {
+    "raw": "20 ounces ... bread flour",
+    "method": "to_grams(oz->g); baker's-percentage anchor"
+    },
+    "flour_type": {
+    "raw": "bread flour, preferably Italian-style \"OO\"",
+    "method": "match_alias",
+    "note": "named 'bread flour' but author prefers Italian-style 00; matched literal name, not preference (text says letter-O 'OO', not digit '00', so alias didn't fire on 00 anyway)"
+    },
+    "water": {
+    "raw": "13 ounces water",
+    "method": "to_grams + to_baker_percentage"
+    },
+    "salt": {
+    "raw": ".4 ounces kosher salt (about 4 teaspoons)",
+    "method": "to_grams + to_baker_percentage"
+    },
+    "yeast": {
+    "raw": ".3 ounces (about 2 teaspoons) instant yeast",
+    "method": "to_grams + to_baker_percentage"
+    },
+    "yeast_type": {
+    "raw": "instant yeast",
+    "method": "match_alias"
+    },
+    "fat": {
+    "raw": "(not present in source)",
+    "method": "manual",
+    "note": "no fat ingredient in source; defaulted to 0"
+    },
+    "fat_type": {
+    "raw": "(not present in source)",
+    "method": "manual",
+    "note": "no fat ingredient in source; defaulted to 0"
+    },
+    "sugar": {
+    "raw": "(not present in source)",
+    "method": "manual",
+    "note": "no sugar ingredient in source; defaulted to 0"
+    },
+    "sugar_type": {
+    "raw": "(not present in source)",
+    "method": "manual",
+    "note": "no sugar ingredient in source; defaulted to 0"
+    }
+},
+"flour": 100.0,
+"flour_type": "bread",
+"water": 65.0,
+"salt": 2.0,
+"yeast": 1.5,
+"yeast_type": "instant",
+"fat": 0.0,
+"fat_type": null,
+"sugar": 0.0,
+"sugar_type": null
+}
+```
 
-## Data Availability
+## Style Centroid Calculation
 
-Given the volume and variability of publicly available recipes, and an initial exploration of large-scale, publicly-scraped recipe data finding regional dough styles too sparsely and inconsistently named to support classification directly, this project will instead curate a small, hand-selected database of well-documented recipes per subclass, sourced from cookbooks, baking competitions, and baking-community formula threads (e.g. pizzamaking.com). Recipes will be logged via a lightweight raw-text intake process and parsed into a structured schema before normalization.
+The expert-defined recipes will be used to calculate *style centroids* in the feature space, based on their labels. This will provide us a neighborhood of canonical formulations for each style.
 
-"Canoncial" recipes will be established from aggregated well-regarded sources, as to create as clear a definition of possible subclasses as possible. Because the curated set will be small relative to a scraped corpus, subclass definitions ("centroids") will be anchored in baker's-percentage formulas published by expert sources (King Arthur, Forkish, López-Alt, pizzamaking.com) rather than estimated purely from sample averages; the curated recipes establish the acceptable variation around each subclass rather than its location.
+I will then define affinity scores for each recipe across each style. This will serve two purposes;
 
-Recipes will be normalized into a standard format (baker's percentages: hydration, salt, yeast, and fat as a ratio of total flour weight) to allow for effective comparison. Where standard baking units are less precise (e.g. volume measurements), as constant conversion will be used. Sourdough-leavened recipes will be converted to the same commercial-yeast baseline via a mass-balance convention (splitting a starter into its flour/water contribution at its stated or assumed hydration), with leavening strength treated as an approximate, separately-flagged feature given the difficulty of establishing a mature starter's activity from text alone.
+1. Check against the expert classification of the styles
+2. Provide a baseline against which to measure other supervised learning methods
 
-## Process
+## Supervised Learning - Style Classification
 
-The entire modeling pipeline will be as follows;
+Once the affinity score baselines are established, I will explore various supervised classification techniques and models to see if the formulations are sufficient to distinguish between the three styles. Due to the small size of the dataset, I will use stratified cross fold validation on the results. Models will be evaluated with typical classification metrics, including F1, accuracy, and confusion matrix analysis.
 
-- Recipe curation & intake: Recipes will be hand-selected from expert sources and logged in raw text form via a lightweight intake process, to be parsed into the project's structured schema.
-- Normalization: Recipe ingredients and techniques will be normalized into a standard format, including a mass-balance conversion for sourdough-leavened recipes.
-- Labeling: Each curated recipe will be labeled with its subclass (e.g. "New York pizza dough") and source provenance.
-- Ingredient Encoding: Ingredients will be converted to weight-based proportions, the standardized "baker's percentages". This will account for both recipe scale and standardization.
-- Feature Encoding: Given the small curated sample, the feature set is deliberately reduced to five ingredient-based ratios per recipe — hydration (water), salt, yeast (commercial or sourdough-starter equivalent), fat (oil, lard, etc.), and flour protein content — each weighted by domain judgement rather than learned or sample-estimated weights, with hydration and yeast/fermentation intensity treated as the primary discriminators per baking literature. Process and physical parameters (fermentation schedule, oven type and temperature, dough thickness factor) are deferred beyond this project's scope rather than included as a large, sparsely-supported feature vector.
-- Centroid & Tolerance Estimation: For each subclass, a centroid will be established as a shrinkage combination of published expert formulas (prior) and the curated recipes' sample mean (evidence), with the curated recipes also used to estimate the acceptable variation (tolerance) around it.
-- Distance Scoring: A new or adjusted recipe's feature vector will be scored against every subclass centroid and converted into a style **affinity score** (e.g. "60% New York, 40% Neapolitan"), explicitly interpreted as a similarity measure rather than a calibrated probability, with a bootstrap-derived uncertainty band attached to each score.
-- Recipe Adjustment: A user interface will be developed allowing users to input a recipe. The tool will respond with the affinity distribution above, plus the per-feature difference to a chosen target subclass's centroid as a direct, directional recommendation.
+The goal of this step is to explore if the models can approximate expert labels from the formulations themselves.
 
-## Scope & Limitations
+## Optimization
 
-- Classes will be limited to unenriched doughs and will be determined based on data availability.
-- Scope is narrowed to pizza dough styles, since regional pizza styles are the most concretely named and best-documented in baking literature and community sources (e.g. pizzamaking.com). General bread styles are out of scope for this project. Candidate styles include New York, Neapolitan, Detroit, Chicago, and Sicilian, but this project is deliberately framed as a small-data pilot study on a handful of well-defined styles rather than an attempt at broad regional coverage: the primary evaluated set will be whichever ~3 styles reach a curated-sample floor first, with any style that doesn't clear that floor shown only as an affinity score, not included in formal evaluation.
-- Recipes will be hand-picked exemplary formulas from expert sources including King Arthur, James Beard Award winner Ken Forkish, author of Flour Water Salt Yeast,[^forkish] James Beard Award winner Kenji López-Alt,[^kenji] and baking-community formula threads (e.g. pizzamaking.com), rather than aggregated from general recipe websites. The overall expertise behind these formulas will still vary by source, so each curated recipe records its provenance (cookbook, competition, forum consensus, etc.) for later weighting.
-- Given the resulting small sample size per subclass (on the order of ten per style, not hundreds), subclass centroids will be anchored in the published formulas above rather than estimated purely from sample means, with the curated recipes establishing tolerance/variation around each centroid. At this sample size, evaluation uses repeated stratified train/test splits and bootstrap-based uncertainty estimates rather than a single reported accuracy figure, and results are reported with their uncertainty rather than as point estimates. Sourdough-leavened recipes carry an additional, explicitly-flagged approximation for converting starter activity into an equivalent leavening rate.
+Optimization in this context refers to allowing a formulation to be improved towards a specific outcome. This is where the subjectivity of culinary preferences can be explored - an individual's ideal pizza formulation may not be a true "New York Style", but perhaps a blend of New York Style and Neopolitan. Thus the *constrained optimization problem* is to take a recipe and minimally adjust it to maximize the "blend" specified. In plain language, can we take a New York Style recipe and move it closer to a Neopolitan style by $X%$?
 
-## Sources
+If the scope allows, this section will also attempt to handle environmental variables and constraints, such as flour type limitations, atmospheric pressure, and equipment, which all contribute significantly to overall results.
 
-[^ka-2000]: [King Arthur's Flour Sales Rise Over 2,000% in March (Adweek)](https://www.adweek.com/brand-marketing/king-arthur-flour-sales-up-over-2000-percent-march-coronavirus-baking/)
-[^ka-58]: [King Arthur Baking Company Sees Flour Sales Rise 58% Amid Pandemic (Yahoo Finance)](https://finance.yahoo.com/news/king-arthur-baking-company-sees-flour-sales-rise-58-amid-pandemic-130854511.html); [Perishable News](https://perishablenews.com/bakery/king-arthur-baking-company-sees-flour-sales-rise-58-amid-pandemic/)
-[^ka-number-one]: [Holding to Founding 1896 Principle Pays Dividends at King Arthur Baking (Baking Business)](https://www.bakingbusiness.com/articles/64760-holding-to-founding-1896-principle-pays-dividends-at-king-arthur-baking)
-[^ooni]: [Ooni Pizza Oven: From Backyard Side Hustle to $200 Million (Entrepreneur)](https://www.entrepreneur.com/starting-a-business/ooni-pizza-oven-from-backyard-side-hustle-to-200-million/488828); [Ooni's Revenue Decreases by 24% but Financial Health Improves (CookOut News)](https://www.cookoutnews.com/oonis-revenue-decreases-by-24-but-financial-health-improves/)
-[^gozney]: Gozney Group Limited annual accounts, Companies House company no. 07200046, FYs ended 31 March 2021–2024 (audited turnover; see `references/gozney_group_limited_accounts_*`); corroborated by [Gozney Grows Revenue by 62%, Expects to Close New Funding Round (CookOut News)](https://www.cookoutnews.com/gozney-grows-revenue-by-62-expects-to-close-new-funding-round/) and [Gozney Total Raised (CB Insights)](https://www.cbinsights.com/company/gozney/financials)
-[^trends]: [Sourdough Searches Keep Surging 5 Years On (fooddrinklife.com)](https://fooddrinklife.com/sourdough-baking-trend-searches/); [homenewshere.com](https://homenewshere.com/national/features/article_7a6f4a67-fc72-5369-99f2-77a0d86b89c8.html)
-[^flour-measure]: [How to Measure Flour (King Arthur Baking blog)](https://www.kingarthurbaking.com/blog/2023/10/13/measure-flour) — a "cup" of flour weighs ~120g using the fluff/spoon/level method but up to ~160g if scooped densely packed, a ~33% swing from technique alone.
-[^oven-variance]: [Oven Accuracy and Calibration: Cook Better (ThermoWorks blog)](https://blog.thermoworks.com/thermal-secrets-oven-calibration/) — ovens set to the same nominal temperature have been measured varying by as much as 90°F unit-to-unit.
-[^altitude]: [How to Bake Sourdough Bread at High Altitude (The Perfect Loaf)](https://www.theperfectloaf.com/how-to-bake-sourdough-bread-at-high-altitude/); [High Altitude Baking Adjustments (Elevation Baking)](https://www.elevationbaking.com/high-altitude-baking-adjustments)
-[^forkish]: Forkish, K. (2012). *Flour Water Salt Yeast: The Fundamentals of Artisan Bread and Pizza.* Ten Speed Press. James Beard Award winner.
-[^kenji]: López-Alt, J. K. (2015). *The Food Lab: Better Home Cooking Through Science.* W. W. Norton & Company. James Beard Award winner.
+## User Interface
+
+As a way to interact with the models and optimization algorithm, I will develop a user interface where users can input their own formulations and retrieve a affinity-score classification, adjust towards a target style, as well as other variables.
+
+## Project Outcome
+
+The project will deliver a conclusion the the research question, a curated dataset of labeled, expert pizza dough formulations, a deployed user interface for recipe developement.
+
+## Future Scaling
+
+There is great potential for this approach to be expanded. Below are a few ways the project could be scaled
+
+- Include and encode full dough processing steps, including mixing, bulk fermentation, shaping, etc.
+- Add additional recipes using the established schema & conventions
+- Expand the class targets to include other unenriched doughs, including classic representations like baguettes, boules, and loaves
+- Develop nutritional profiles using the specific and measurable ingredients
+- Leverage the framework to other more complex culinary applications, such as desserts or pastries
