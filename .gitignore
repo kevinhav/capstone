@@ -10,3 +10,10 @@ wheels/
 .venv
 
 .env
+
+# WIP docs
+
+proposal_notes.md
+project_plan.md
+revised_proposal.md
+ideas.md
