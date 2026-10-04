@@ -29,7 +29,10 @@ data/raw/        curated recipes (immutable) + schema and intake notes
 data/interim/    temporary cached results (not committed)
 data/processed/  derived outputs: recipes.jsonl, features.jsonl, centroids.json
 models/          pickled fitted pipelines (not committed)
-notebooks/       01 EDA, 02 centroids/network, 03 classification, 04 constrained optimization, 05 blended targets
+notebooks/
+  explore/       working analysis: 01 EDA, 02 centroids/network, 03 classification,
+                 04 constrained optimization, 05 blended targets (not committed)
+  present/       notebooks for final presentation
 ```
 
 ## Usage
