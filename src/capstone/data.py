@@ -79,7 +79,23 @@ class Recipe:
 
 
 # -- unit conversions -------------------------------------------------------
+#
+# References (checked 2026-10-04):
+#   [NIST]  NIST Handbook 44 (2026), Appendix C, "General Tables of Units of Measurement".
+#           https://doi.org/10.6028/NIST.HB.44-2026
+#   [USDA]  USDA FoodData Central, SR Legacy (2018-04 release), food_portion table; cited as
+#           (FDC id / NDB no.). https://fdc.nal.usda.gov
+#   [KA]    King Arthur Baking, "Ingredient Weight Chart".
+#           https://www.kingarthurbaking.com/learn/ingredient-weight-chart
+#   [KAPro] King Arthur Baking Pro reference pages "Yeast" and "Preferment".
+#           https://www.kingarthurbaking.com/pro/reference/yeast
+#           https://www.kingarthurbaking.com/pro/reference/preferment
+#   [SAF]   Lesaffre Yeast Corp., SAF-Instant Yeast (Red Label) technical data sheet, "Usage".
+#   [RS]    Red Star Yeast, "Yeast Conversion Chart". https://redstaryeast.com/yeast-conversion-chart/
+#
+# USDA cup weights convert to g/mL using the 236.588 mL cup below.
 
+# [NIST]: avoirdupois oz = 28.349 523 125 g and lb = 453.592 37 g, both exact
 MASS_TO_GRAMS: dict[str, float] = {
     "g": 1.0,
     "oz": 28.3495,
@@ -87,6 +103,9 @@ MASS_TO_GRAMS: dict[str, float] = {
     "kg": 1000.0,
 }
 
+# US customary volumes, all derived from [NIST] fl oz = 29.573 53 mL: cup = 8 fl oz,
+# tbsp = 1/2 fl oz, tsp = 1/3 tbsp (all exact). NIST also gives rounded "measuring" values
+# (cup 237 mL, tbsp 15 mL, tsp 5 mL); the difference is under 1.5% and doesn't matter here.
 VOLUME_TO_ML: dict[str, float] = {
     "ml": 1.0,
     "l": 1000.0,
@@ -98,46 +117,59 @@ VOLUME_TO_ML: dict[str, float] = {
 
 # grams per mL, for converting a volume of a liquid ingredient to weight
 INGREDIENT_DENSITY_G_PER_ML: dict[str, float] = {
-    "water": 1.00,
-    "olive_oil": 0.91,
-    "honey": 1.42,
-    "sugar_white": 0.845,  # granulated
-    "sugar_brown": 0.93,  # packed
+    "water": 1.00,  # [USDA] tap water 1 L = 1000 g (173647 / 14411)
+    "olive_oil": 0.91,  # [USDA] 1 cup = 216 g, 1 tbsp = 13.5 g -> 0.913 (171413 / 4053)
+    "honey": 1.42,  # [USDA] 1 tbsp = 21 g -> 1.42; 1 cup = 339 g -> 1.43 (169640 / 19296)
+    "sugar_white": 0.845,  # granulated; [USDA] 1 cup = 200 g -> 0.845 (169655 / 19335)
+    "sugar_brown": 0.93,  # packed; [USDA] 1 cup packed = 220 g -> 0.930 (168833 / 19334)
 }
 
 # dry yeast is usually measured by volume in source recipes; g per tsp
 YEAST_DENSITY_G_PER_TSP: dict[YeastType, float] = {
+    # [RS] one packet = 7 g = 2 1/4 tsp -> 3.11; [KA] gives 3.0 (2 tsp = 6 g, 1 tbsp = 9 g)
     YeastType.instant: 3.1,
-    YeastType.active_dry: 3.3,
+    # [USDA] 1 tsp = 4 g, 1 tbsp = 12 g (175043 / 18375). Packet math gives less:
+    # [USDA] 7.2 g packet -> 3.2, [RS] 7 g packet -> 3.1
+    YeastType.active_dry: 4.0,
 }
 
-# for the rare source recipe that measures flour by volume with no gram weight given at all
+# for the rare source recipe that measures flour by volume with no gram weight given at all.
+# A cup of flour depends on how it was filled (spooned vs. scooped), so these are rough
+# estimates: [USDA] and [KA] disagree by 3-15%. Values without a [USDA] entry, or where no
+# source matched, follow [KA].
 FLOUR_DENSITY_G_PER_CUP: dict[FlourType, float] = {
-    FlourType.all_purpose: 125.0,
-    FlourType.bread: 127.0,
-    FlourType.high_gluten: 130.0,
-    FlourType.double_zero: 130.0,
-    FlourType.semolina: 167.0,
+    FlourType.all_purpose: 125.0,  # [USDA] 1 cup = 125 g (168894 / 20081); [KA] 120 g
+    FlourType.bread: 120.0,  # [KA] 1 cup = 120 g; [USDA] 137 g (168896 / 20083)
+    FlourType.high_gluten: 120.0,  # [KA] 1 cup = 120 g; not in [USDA]
+    FlourType.double_zero: 116.0,  # [KA] "'00' Pizza Flour" 1 cup = 116 g; not in [USDA]
+    FlourType.semolina: 167.0,  # [USDA] 1 cup = 167 g (169715 / 20066); [KA] 163 g
 }
 
 # salt density varies enough by brand/grind to matter when only a volume is given
 SALT_DENSITY_G_PER_TSP: dict[str, float] = {
-    "table": 6.0,
-    "diamond_crystal_kosher": 2.8,
-    "mortons_kosher": 4.8,
+    "table": 6.0,  # [USDA] 1 tsp = 6 g (173468 / 2047); [KA] 1 tbsp = 18 g
+    "diamond_crystal_kosher": 2.8,  # manufacturer Nutrition Facts panel: 1/4 tsp = 0.7 g
+    "mortons_kosher": 4.8,  # manufacturer Nutrition Facts panel: 1/4 tsp = 1.2 g
 }
 
 # multiplier to convert a gram amount of this yeast type into its instant-dry-yeast
-# equivalent (grams_instant = grams_x * ratio)
+# equivalent (grams_instant = grams_x * ratio). Published ratios vary, so treat these as
+# approximate. Both are taken from [KAPro]'s fresh-yeast factors so they agree with each other.
 YEAST_TO_INSTANT_RATIO: dict[YeastType, float] = {
     YeastType.instant: 1.0,
-    YeastType.active_dry: 0.8,  # ADY = IDY * 1.25
-    YeastType.fresh: 1 / 3,  # fresh = IDY * 3
+    # [KAPro] fresh->ADY x0.4 and fresh->IDY x0.33, so ADY->IDY = 0.33 / 0.4 = 0.825.
+    # Others differ: [SAF] 0.75 ("3/4 the amount"), [RS] and the KA home-baking blog 1.0
+    YeastType.active_dry: 0.33 / 0.4,
+    # [KAPro] fresh->IDY x0.33; [SAF] IDY replaces compressed at "33-40 percent"
+    YeastType.fresh: 0.33,
     # sourdough_starter has no fixed ratio - handled via mass-balance, not scaling
 }
 
 # poolish is equal parts flour and water by weight; also the default assumed hydration
-# for a sourdough starter whose own hydration isn't stated in the source recipe
+# for a sourdough starter whose own hydration isn't stated in the source recipe.
+# [KAPro] Preferment: poolish "is by definition made with equal weights of flour and water
+# (that is, it is 100% hydration)". For levain, [KAPro] gives 50-125% hydration, so 100% is a
+# convention for starters, not a definition.
 DEFAULT_STARTER_HYDRATION_PCT: float = 100.0
 
 

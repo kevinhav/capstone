@@ -79,7 +79,11 @@ constants rather than re-derived each time:
 - thepizzaheaven: `1g fresh yeast (0.1%) or 0.28g active dry yeast (0.03%)` → fresh:ADY ≈
   3.57:1.
 - Gozney Sicilian: `0.6 Oz compressed yeast (1%) / 0.17 Oz instant yeast` → compressed:IDY ≈
-  3.5:1, consistent with the standard ADY = IDY × 1.25 conversion.
+  3.5:1.
+
+The constants in `capstone.data.YEAST_TO_INSTANT_RATIO` follow King Arthur Baking Pro's
+published factors (fresh → IDY × 0.33, fresh → ADY × 0.4, so ADY → IDY = 0.825) rather than
+these per-recipe ratios; see the source comments there.
 
 Per `PROJECT_PLAN.md` Phase 2, normalization to an instant-yeast-equivalent happens downstream
 in the feature pipeline, not at intake — so the raw CSV should keep whatever `yeast_type` and

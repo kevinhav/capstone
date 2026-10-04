@@ -271,7 +271,7 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 | Flour | 100.00 | all-purpose |
 | Water | 66.24 | - |
 | Salt | 1.92 | - |
-| Yeast | 1.06 | active-dry |
+| Yeast | 1.28 | active-dry |
 | Fat | 2.15 | vegetable oil |
 | Sugar | 2.24 | honey |
 

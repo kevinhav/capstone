@@ -31,7 +31,7 @@
     "centroid": {
       "num__water": -0.223901,
       "num__salt": 0.688536,
-      "num__yeast": -0.261745,
+      "num__yeast": -0.272049,
       "num__fat": -0.706054,
       "num__sugar": -0.35247,
       "cat__flour_type_all-purpose": 0.090909,
@@ -56,7 +56,7 @@
     "numeric_mean": {
       "water": 62.3509,
       "salt": 2.0619,
-      "yeast": 0.4821,
+      "yeast": 0.5008,
       "fat": 1.6584,
       "sugar": 1.1494
     },
@@ -84,7 +84,7 @@
     "centroid": {
       "num__water": -0.43051,
       "num__salt": -0.565605,
-      "num__yeast": -0.185653,
+      "num__yeast": -0.153185,
       "num__fat": 0.226402,
       "num__sugar": 0.469031,
       "cat__flour_type_all-purpose": 0.166667,
@@ -136,7 +136,7 @@
     "centroid": {
       "num__water": 0.84767,
       "num__salt": -0.087405,
-      "num__yeast": 0.567447,
+      "num__yeast": 0.536751,
       "num__fat": 0.561085,
       "num__sugar": -0.194578,
       "cat__flour_type_all-purpose": 0.0,
