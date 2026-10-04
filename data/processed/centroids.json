@@ -1,0 +1,159 @@
+{
+  "neapolitan": {
+    "n_recipes": 11,
+    "numeric_mean": {
+      "water": 63.3549,
+      "salt": 2.723,
+      "yeast": 0.4511,
+      "fat": 0.0,
+      "sugar": 0.2725
+    },
+    "category_share": {
+      "flour_type": {
+        "double_zero": 0.8182,
+        "bread": 0.0909,
+        "all-purpose": 0.0909
+      },
+      "yeast_type": {
+        "instant": 0.5455,
+        "fresh": 0.3636,
+        "sourdough-starter": 0.0909
+      },
+      "fat_type": {
+        "none": 1.0
+      },
+      "sugar_type": {
+        "none": 0.7273,
+        "honey": 0.1818,
+        "white": 0.0909
+      }
+    },
+    "centroid": {
+      "num__water": -0.223901,
+      "num__salt": 0.688536,
+      "num__yeast": -0.261745,
+      "num__fat": -0.706054,
+      "num__sugar": -0.35247,
+      "cat__flour_type_all-purpose": 0.090909,
+      "cat__flour_type_bread": 0.090909,
+      "cat__flour_type_double_zero": 0.818182,
+      "cat__flour_type_high-gluten": 0.0,
+      "cat__flour_type_semolina": 0.0,
+      "cat__yeast_type_active-dry": 0.0,
+      "cat__yeast_type_fresh": 0.363636,
+      "cat__yeast_type_instant": 0.545455,
+      "cat__yeast_type_sourdough-starter": 0.090909,
+      "cat__fat_type_extra-virgin olive oil": 0.0,
+      "cat__fat_type_none": 1.0,
+      "cat__fat_type_vegetable oil": 0.0,
+      "cat__sugar_type_honey": 0.181818,
+      "cat__sugar_type_none": 0.727273,
+      "cat__sugar_type_white": 0.090909
+    }
+  },
+  "new-york": {
+    "n_recipes": 12,
+    "numeric_mean": {
+      "water": 62.3509,
+      "salt": 2.0619,
+      "yeast": 0.4821,
+      "fat": 1.6584,
+      "sugar": 1.1494
+    },
+    "category_share": {
+      "flour_type": {
+        "bread": 0.5,
+        "high-gluten": 0.3333,
+        "all-purpose": 0.1667
+      },
+      "yeast_type": {
+        "instant": 0.9167,
+        "active-dry": 0.0833
+      },
+      "fat_type": {
+        "vegetable oil": 0.4167,
+        "none": 0.3333,
+        "extra-virgin olive oil": 0.25
+      },
+      "sugar_type": {
+        "none": 0.4167,
+        "white": 0.3333,
+        "honey": 0.25
+      }
+    },
+    "centroid": {
+      "num__water": -0.43051,
+      "num__salt": -0.565605,
+      "num__yeast": -0.185653,
+      "num__fat": 0.226402,
+      "num__sugar": 0.469031,
+      "cat__flour_type_all-purpose": 0.166667,
+      "cat__flour_type_bread": 0.5,
+      "cat__flour_type_double_zero": 0.0,
+      "cat__flour_type_high-gluten": 0.333333,
+      "cat__flour_type_semolina": 0.0,
+      "cat__yeast_type_active-dry": 0.083333,
+      "cat__yeast_type_fresh": 0.0,
+      "cat__yeast_type_instant": 0.916667,
+      "cat__yeast_type_sourdough-starter": 0.0,
+      "cat__fat_type_extra-virgin olive oil": 0.25,
+      "cat__fat_type_none": 0.333333,
+      "cat__fat_type_vegetable oil": 0.416667,
+      "cat__sugar_type_honey": 0.25,
+      "cat__sugar_type_none": 0.416667,
+      "cat__sugar_type_white": 0.333333
+    }
+  },
+  "sicilian": {
+    "n_recipes": 9,
+    "numeric_mean": {
+      "water": 68.5623,
+      "salt": 2.314,
+      "yeast": 0.7893,
+      "fat": 2.2536,
+      "sugar": 0.441
+    },
+    "category_share": {
+      "flour_type": {
+        "high-gluten": 0.5556,
+        "bread": 0.2222,
+        "double_zero": 0.1111,
+        "semolina": 0.1111
+      },
+      "yeast_type": {
+        "instant": 0.8889,
+        "fresh": 0.1111
+      },
+      "fat_type": {
+        "extra-virgin olive oil": 0.5556,
+        "none": 0.4444
+      },
+      "sugar_type": {
+        "none": 0.6667,
+        "white": 0.3333
+      }
+    },
+    "centroid": {
+      "num__water": 0.84767,
+      "num__salt": -0.087405,
+      "num__yeast": 0.567447,
+      "num__fat": 0.561085,
+      "num__sugar": -0.194578,
+      "cat__flour_type_all-purpose": 0.0,
+      "cat__flour_type_bread": 0.222222,
+      "cat__flour_type_double_zero": 0.111111,
+      "cat__flour_type_high-gluten": 0.555556,
+      "cat__flour_type_semolina": 0.111111,
+      "cat__yeast_type_active-dry": 0.0,
+      "cat__yeast_type_fresh": 0.111111,
+      "cat__yeast_type_instant": 0.888889,
+      "cat__yeast_type_sourdough-starter": 0.0,
+      "cat__fat_type_extra-virgin olive oil": 0.555556,
+      "cat__fat_type_none": 0.444444,
+      "cat__fat_type_vegetable oil": 0.0,
+      "cat__sugar_type_honey": 0.0,
+      "cat__sugar_type_none": 0.666667,
+      "cat__sugar_type_white": 0.333333
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Pizza Recipe",
-  "description": "One curated recipe, in baker's-percentage form. Mirrors capstone.recipe.Recipe for the modeled fields, plus raw_text/mapping for provenance so every converted value can be traced back to the source.",
+  "description": "One curated recipe, in baker's-percentage form. Mirrors capstone.data.Recipe for the modeled fields, plus raw_text/mapping for provenance so every converted value can be traced back to the source.",
   "type": "object",
   "required": [
     "recipe_id", "style", "source", "raw_text", "mapping",
@@ -21,7 +21,7 @@
         },
         "method": {
           "type": "string",
-          "description": "How raw was turned into the field's value - a Conversions method/table name (e.g. 'to_grams', 'to_baker_percentage', 'match_alias', 'split_starter', 'YEAST_TO_INSTANT_RATIO'), or 'manual' for a judgment call not covered by Conversions."
+          "description": "How raw was turned into the field's value - a capstone.data conversion function/table name (e.g. 'to_grams', 'to_baker_percentage', 'match_alias', 'split_starter', 'YEAST_TO_INSTANT_RATIO'), or 'manual' for a judgment call not covered by Conversions."
         },
         "note": {
           "type": "string",

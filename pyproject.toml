@@ -9,9 +9,14 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "ipykernel>=7.3.0",
+    "joblib>=1.6.0",
     "jupyter>=1.1.1",
+    "loguru>=0.7.3",
     "matplotlib>=3.11.2",
+    "networkx>=3.7",
     "pandas>=3.0.5",
+    "scikit-learn>=1.9.1",
+    "streamlit>=1.65.0",
 ]
 
 [project.scripts]
@@ -20,3 +25,8 @@ capstone = "capstone:main"
 [build-system]
 requires = ["uv_build>=0.12.3,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

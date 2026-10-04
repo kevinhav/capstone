@@ -24,3 +24,11 @@ ideas.md
 # Data files
 
 *.csv
+# Generated artifacts
+/models/*
+!/models/.gitkeep
+/logs/
+/data/interim/*
+!/data/interim/.gitkeep
+
+*.ipynb
