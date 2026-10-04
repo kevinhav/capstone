@@ -14,6 +14,7 @@ from capstone.config import (
     FEATURES,
     FLOUR_BASIS,
     INGREDIENT_UNITS,
+    NUMERIC,
     OPTIONAL,
     PATHS,
     PROVENANCE,
@@ -288,6 +289,28 @@ def to_grams(amount: float, unit: str, density_g_per_ml: float | None = None) ->
 def to_baker_percentage(ingredient_g: float, flour_g: float) -> float:
     """Express an ingredient's weight as a percentage of total flour weight."""
     return ingredient_g / flour_g * FLOUR_BASIS
+
+
+def scale_recipe(recipe: pd.Series, total_g: float) -> pd.Series:
+    """Ingredient weights in grams for a batch of `total_g` dough (the inverse of
+    `to_baker_percentage`).
+
+    Args:
+        recipe: Row with the NUMERIC columns in baker's percentages.
+        total_g: Total dough weight, e.g. number of dough balls * ball weight.
+
+    Returns:
+        Grams indexed by flour followed by the NUMERIC ingredients.
+    """
+    ratios = recipe[NUMERIC].astype(float)
+    flour_g = total_g * FLOUR_BASIS / (FLOUR_BASIS + ratios.sum())
+    return pd.concat([pd.Series({Col.flour: flour_g}), ratios * flour_g / FLOUR_BASIS])
+
+
+def dough_ball_grams(thickness_factor: float, area_sq_in: float) -> float:
+    """Dough ball weight for one pizza: thickness factor (ounces of dough per square inch)
+    times the pizza's area, e.g. pi * r^2 for a round pizza of radius r inches."""
+    return thickness_factor * area_sq_in * MASS_TO_GRAMS["oz"]
 
 
 # -- loading ----------------------------------------------------------------

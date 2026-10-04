@@ -177,6 +177,38 @@ INGREDIENT_UNITS: Final[tuple[IngredientUnit, ...]] = (
 FLOUR_BASIS: Final = 100.0  # baker's percentages are expressed relative to flour = 100
 
 
+# -- pizza size -------------------------------------------------------------
+
+
+class PanShape(StrEnum):
+    round = "round"
+    rectangle = "rectangle"
+
+
+@dataclass(frozen=True)
+class PizzaSize:
+    """Typical thickness factor range (ounces of dough per square inch) and pan for a style;
+    dimensions in inches."""
+
+    factor_low: float
+    factor_high: float
+    shape: PanShape
+    diameter: float = 12.0
+    length: float = 18.0
+    width: float = 13.0
+
+    @property
+    def factor(self) -> float:
+        return round((self.factor_low + self.factor_high) / 2, 4)
+
+
+STYLE_SIZES: Final[Mapping[Style, PizzaSize]] = {
+    Style.neapolitan: PizzaSize(0.095, 0.11, PanShape.round, diameter=12.0),  # home oven, not high-temperature
+    Style.new_york: PizzaSize(0.085, 0.10, PanShape.round, diameter=14.0),  # street / slice style
+    Style.sicilian: PizzaSize(0.12, 0.13, PanShape.rectangle, length=18.0, width=13.0),  # half-sheet pan
+}
+
+
 # -- shared types -----------------------------------------------------------
 
 type StyleMix = Mapping[Style | str, float]
@@ -218,9 +250,16 @@ class FrankensteinConfig:
 
 @dataclass(frozen=True)
 class PlotConfig:
+    # first three categorical slots of the dataviz reference palette (blue, orange, aqua),
+    # which stay distinguishable under color-vision deficiency; dark-theme steps alongside
     style_colors: Mapping[Style, str] = field(
-        default_factory=lambda: {Style.neapolitan: "tab:red", Style.new_york: "tab:blue", Style.sicilian: "tab:green"}
+        default_factory=lambda: {Style.neapolitan: "#2a78d6", Style.new_york: "#eb6834", Style.sicilian: "#1baf7a"}
     )
+    style_colors_dark: Mapping[Style, str] = field(
+        default_factory=lambda: {Style.neapolitan: "#3987e5", Style.new_york: "#d95926", Style.sicilian: "#199e70"}
+    )
+    surface: str = "#ffffff"  # Streamlit's default light and dark page backgrounds
+    surface_dark: str = "#0e1117"
     original_color: str = "tab:blue"
     adjusted_color: str = "tab:orange"
     target_color: str = "gray"
