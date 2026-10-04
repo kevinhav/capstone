@@ -17,3 +17,10 @@ proposal_notes.md
 project_plan.md
 revised_proposal.md
 ideas.md
+
+*.pdf
+*.svg
+
+# Data files
+
+*.csv
