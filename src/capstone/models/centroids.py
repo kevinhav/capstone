@@ -19,6 +19,8 @@ CENTROID_STEP: Final = "centroid"
 _SUM_TO_ONE_PENALTY: Final = 1e3  # weight of the soft sum-to-one row in estimate_mix
 
 
+# Pipeline fits on prepped features to calculate centroid per label
+# There's no learned weights here, we're just taking the average for each style (mean, std dev)
 def fit_centroids(X: pd.DataFrame, y: pd.Series) -> Pipeline:
     """Fit preprocessing + NearestCentroid, giving one centroid per style.
 
@@ -26,7 +28,9 @@ def fit_centroids(X: pd.DataFrame, y: pd.Series) -> Pipeline:
         X: Recipes with the FEATURES columns.
         y: Style label per recipe.
     """
-    pipe = Pipeline([(PREP_STEP, build_preprocessor()), (CENTROID_STEP, NearestCentroid())])
+    pipe = Pipeline(
+        [(PREP_STEP, build_preprocessor()), (CENTROID_STEP, NearestCentroid())]
+    )
     return pipe.fit(X[FEATURES], y)
 
 
@@ -45,28 +49,43 @@ def styles(pipe: Pipeline) -> list[str]:
     return list(pipe[CENTROID_STEP].classes_)
 
 
+# Get the centroid vector in transformed feature space per style
+# outputs a dataframe with one row per style, column per feature
 def centroids(pipe: Pipeline) -> pd.DataFrame:
     """Centroid coordinates, one row per style, in the transformed feature space.
     Categorical coordinates are the share of that style's recipes using each category."""
-    return pd.DataFrame(pipe[CENTROID_STEP].centroids_, index=styles(pipe), columns=feature_names(pipe))
+    return pd.DataFrame(
+        pipe[CENTROID_STEP].centroids_, index=styles(pipe), columns=feature_names(pipe)
+    )
 
 
+# Calculate distances from each recipe to the style centroid
 def distances(pipe: Pipeline, X: pd.DataFrame) -> pd.DataFrame:
     """Euclidean distance from each recipe to each style centroid."""
-    return pd.DataFrame(pairwise_distances(transform(pipe, X), centroids(pipe)), index=X.index, columns=styles(pipe))
+    return pd.DataFrame(
+        pairwise_distances(transform(pipe, X), centroids(pipe)),
+        index=X.index,
+        columns=styles(pipe),
+    )
 
 
+# Calculate affinity, gives us a score, use softmax to handle negative distance
 def affinity(pipe: Pipeline, X: pd.DataFrame) -> pd.DataFrame:
     """Softmax over negative centroid distance. A similarity score, not a calibrated probability."""
+    # highest affinity is always the nearest centroid, but softmax blends
+    # highest affinity should always agree with predict()
+    # This just lets us blend styles
     w = np.exp(-distances(pipe, X))
     return w.div(w.sum(axis=1), axis=0)
 
 
+# Find the closest style centroid for each recipe
 def predict(pipe: Pipeline, X: pd.DataFrame) -> pd.Series:
     """Nearest-centroid style for each recipe."""
     return pd.Series(pipe.predict(X[FEATURES]), index=X.index)
 
 
+# Handle the normalization and mix of style
 def resolve_target(target: Target, known: list[str]) -> dict[str, float]:
     """Normalize a style name or {style: share} mix to shares summing to 1.
 
@@ -76,7 +95,11 @@ def resolve_target(target: Target, known: list[str]) -> dict[str, float]:
     Raises:
         ValueError: For unknown styles, negative shares, or all-zero shares.
     """
-    mix = {str(target): 1.0} if isinstance(target, str) else {str(k): float(v) for k, v in target.items()}
+    mix = (
+        {str(target): 1.0}
+        if isinstance(target, str)
+        else {str(k): float(v) for k, v in target.items()}
+    )
     unknown = set(mix) - set(known)
     if unknown:
         raise ValueError(f"unknown styles: {sorted(unknown)}")
@@ -86,16 +109,22 @@ def resolve_target(target: Target, known: list[str]) -> dict[str, float]:
     return {k: v / total for k, v in sorted(mix.items()) if v > 0}
 
 
+# Get the weighted average of the style centroids and return the blended vector
 def blend_centroid(pipe: Pipeline, target: Target) -> pd.Series:
     """Share-weighted average of the style centroids for a style or style mix."""
     cents = centroids(pipe)
-    return sum(share * cents.loc[style] for style, share in resolve_target(target, styles(pipe)).items())
+    return sum(
+        share * cents.loc[style]
+        for style, share in resolve_target(target, styles(pipe)).items()
+    )
 
 
 def target_distance(pipe: Pipeline, X: pd.DataFrame, target: Target) -> pd.Series:
     """Euclidean distance of each recipe to the (blended) target centroid."""
     c = blend_centroid(pipe, target).to_numpy()
-    return pd.Series(np.linalg.norm(transform(pipe, X).to_numpy() - c, axis=1), index=X.index)
+    return pd.Series(
+        np.linalg.norm(transform(pipe, X).to_numpy() - c, axis=1), index=X.index
+    )
 
 
 def estimate_mix(pipe: Pipeline, X: pd.DataFrame) -> pd.DataFrame:
@@ -104,11 +133,21 @@ def estimate_mix(pipe: Pipeline, X: pd.DataFrame) -> pd.DataFrame:
     descriptor, since centroids are not well separated in every direction."""
     C = centroids(pipe).to_numpy().T
     A = np.vstack([C, _SUM_TO_ONE_PENALTY * np.ones(C.shape[1])])
-    mix = np.array([nnls(A, np.append(z, _SUM_TO_ONE_PENALTY))[0] for z in transform(pipe, X).to_numpy()])
-    return pd.DataFrame(mix / mix.sum(axis=1, keepdims=True), index=X.index, columns=styles(pipe))
+    mix = np.array(
+        [
+            nnls(A, np.append(z, _SUM_TO_ONE_PENALTY))[0]
+            for z in transform(pipe, X).to_numpy()
+        ]
+    )
+    return pd.DataFrame(
+        mix / mix.sum(axis=1, keepdims=True), index=X.index, columns=styles(pipe)
+    )
 
 
-def centroid_profile(recipes: pd.DataFrame, pipe: Pipeline) -> dict[str, dict[str, object]]:
+# Get human-readable version of the centroid vector
+def centroid_profile(
+    recipes: pd.DataFrame, pipe: Pipeline
+) -> dict[str, dict[str, object]]:
     """Human-readable summary per style: recipe count, numeric means in baker's %,
     category shares, and the transformed-space centroid."""
     cents = centroids(pipe)
@@ -117,7 +156,10 @@ def centroid_profile(recipes: pd.DataFrame, pipe: Pipeline) -> dict[str, dict[st
         profile[style] = {
             "n_recipes": len(group),
             "numeric_mean": group[NUMERIC].mean().round(4).to_dict(),
-            "category_share": {str(c): group[c].value_counts(normalize=True).round(4).to_dict() for c in CATEGORICAL},
+            "category_share": {
+                str(c): group[c].value_counts(normalize=True).round(4).to_dict()
+                for c in CATEGORICAL
+            },
             "centroid": cents.loc[style].round(6).to_dict(),
         }
     logger.debug("built centroid profile for {} styles", len(profile))
@@ -140,5 +182,6 @@ class AffinityClassifier(BaseEstimator, ClassifierMixin):
         w = np.exp(-pairwise_distances(X, self.centroid_.centroids_))
         return w / w.sum(axis=1, keepdims=True)
 
+    # should always agree with affinity
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self.classes_[self.predict_proba(X).argmax(axis=1)]

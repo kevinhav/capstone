@@ -24,11 +24,26 @@ import pandas as pd
 from loguru import logger
 from sklearn.pipeline import Pipeline
 
-from capstone.config import ABSENT, CATEGORICAL, FEATURES, NUMERIC, OPTIONAL, Col, LossWeights, Target
-from capstone.features import category_levels, feature_name, numeric_bounds, scaler_stats
+from capstone.config import (
+    ABSENT,
+    CATEGORICAL,
+    FEATURES,
+    NUMERIC,
+    OPTIONAL,
+    Col,
+    LossWeights,
+    Target,
+)
+from capstone.features import (
+    category_levels,
+    feature_name,
+    numeric_bounds,
+    scaler_stats,
+)
 from capstone.models.centroids import blend_centroid, resolve_target, styles
 
 
+# Data is small enough that we can go through every combination
 @dataclass(frozen=True, eq=False)
 class SearchSpace:
     """Everything about the feature space the adjuster needs, computed once per fitted pipeline."""
@@ -44,6 +59,7 @@ class SearchSpace:
     zero_z: np.ndarray
 
 
+# Setup our penalty function for formulation optimization
 @dataclass(frozen=True)
 class LossBreakdown:
     target: float
@@ -57,6 +73,7 @@ class LossBreakdown:
         return self.target + self.ratio + self.type + self.remove + self.add
 
 
+# Handle the adjustment details
 @dataclass(frozen=True)
 class Adjustment:
     """Result of adjusting one recipe."""
@@ -69,6 +86,7 @@ class Adjustment:
     n_removed: int
 
 
+# Build and scale all enumerations of categorical features
 def build_search_space(pipe: Pipeline, reference: pd.DataFrame) -> SearchSpace:
     """Precompute type combinations, scaler stats, and z-scaled ratio bounds.
 
@@ -78,18 +96,26 @@ def build_search_space(pipe: Pipeline, reference: pd.DataFrame) -> SearchSpace:
     """
     levels = category_levels(pipe)
     combos = np.array(list(product(*(levels[c] for c in CATEGORICAL))), dtype=object)
-    present = {r: combos[:, CATEGORICAL.index(t)] != ABSENT for r, t in OPTIONAL.items()}
+    present = {
+        r: combos[:, CATEGORICAL.index(t)] != ABSENT for r, t in OPTIONAL.items()
+    }
     mean, scale = scaler_stats(pipe)
     lo, hi = numeric_bounds(reference)
     logger.debug("search space: {} type combinations", len(combos))
     return SearchSpace(
-        pipe=pipe, levels=levels, combos=combos, present=present, mean=mean, scale=scale,
+        pipe=pipe,
+        levels=levels,
+        combos=combos,
+        present=present,
+        mean=mean,
+        scale=scale,
         lo_z=(lo[NUMERIC].to_numpy() - mean) / scale,
         hi_z=(hi[NUMERIC].to_numpy() - mean) / scale,
         zero_z=(0.0 - mean) / scale,
     )
 
 
+# Get the square distance between encoding and target centroid
 def _cat_distance(space: SearchSpace, centroid: pd.Series) -> np.ndarray:
     """Squared distance of each type combination's one-hot encoding to the centroid."""
     total = np.zeros(len(space.combos))
@@ -101,22 +127,36 @@ def _cat_distance(space: SearchSpace, centroid: pd.Series) -> np.ndarray:
     return total
 
 
+# Main algo
+# Take formulation, target centroid, loss weights, and return adjusted formulation
 def _adjust_one(
-    recipe: pd.Series, centroid: pd.Series, cat_dist: np.ndarray, target: dict[str, float],
-    space: SearchSpace, w: LossWeights,
+    recipe: pd.Series,
+    centroid: pd.Series,
+    cat_dist: np.ndarray,
+    target: dict[str, float],
+    space: SearchSpace,
+    w: LossWeights,
 ) -> Adjustment:
+    # Compute scaled ratios and then search over all combinations
     c_num = centroid[[feature_name(c) for c in NUMERIC]].to_numpy(dtype=float)
     z0 = (recipe[NUMERIC].to_numpy(dtype=float) - space.mean) / space.scale
     orig_types = recipe[CATEGORICAL].to_numpy(dtype=object)
     orig_present = {r: recipe[r] > 0 for r in OPTIONAL}
     n_combos = len(space.combos)
 
-    keep = np.clip((w.target * c_num + w.ratio * z0) / (w.target + w.ratio), space.lo_z, space.hi_z)
+    # Compute the optimal z, but only for values we've actually seen
+    keep = np.clip(
+        (w.target * c_num + w.ratio * z0) / (w.target + w.ratio), space.lo_z, space.hi_z
+    )
     added = np.clip(c_num, space.lo_z, space.hi_z)
 
     z = np.tile(keep, (n_combos, 1))
-    counted = np.ones((n_combos, len(NUMERIC)), dtype=bool)  # dims whose ratio change is penalized
+    counted = np.ones(
+        (n_combos, len(NUMERIC)), dtype=bool
+    )  # dims whose ratio change is penalized
     n_add, n_remove = np.zeros(n_combos), np.zeros(n_combos)
+
+    # Handle optional ingredients, we don't want to remove if in original recipe
     for r in OPTIONAL:
         j = NUMERIC.index(r)
         here = space.present[r]
@@ -128,12 +168,15 @@ def _adjust_one(
             z[here, j], counted[here, j] = added[j], False
             n_add += here
 
+    # Number of categorical changes
     n_type = np.zeros(n_combos)
     for j, col in enumerate(CATEGORICAL):
         changed = space.combos[:, j] != orig_types[j]
         ratio = next((r for r, t in OPTIONAL.items() if t == col), None)
         if ratio is not None:
-            changed &= space.present[ratio] & orig_present[ratio]  # add/remove are counted separately
+            changed &= (
+                space.present[ratio] & orig_present[ratio]
+            )  # add/remove are counted separately
         n_type += changed
 
     components = {
@@ -143,8 +186,9 @@ def _adjust_one(
         "remove": w.remove * n_remove,
         "add": w.add * n_add,
     }
-    best = int(np.argmin(sum(components.values())))
+    best = int(np.argmin(sum(components.values())))  # This is our best combo
 
+    # Compute and return the adjusted recipe with loss details
     adjusted = recipe[FEATURES].copy()
     adjusted[NUMERIC] = z[best] * space.scale + space.mean
     adjusted[CATEGORICAL] = space.combos[best]
@@ -161,7 +205,13 @@ def _adjust_one(
     )
 
 
-def adjust(recipe: pd.Series, target: Target, space: SearchSpace, weights: LossWeights = LossWeights()) -> Adjustment:
+# Orchestrate teh adjustment process
+def adjust(
+    recipe: pd.Series,
+    target: Target,
+    space: SearchSpace,
+    weights: LossWeights = LossWeights(),
+) -> Adjustment:
     """Adjust one recipe toward a style or style mix with minimal change.
 
     Args:
@@ -172,11 +222,17 @@ def adjust(recipe: pd.Series, target: Target, space: SearchSpace, weights: LossW
     """
     mix = resolve_target(target, styles(space.pipe))
     centroid = blend_centroid(space.pipe, mix)
-    return _adjust_one(recipe, centroid, _cat_distance(space, centroid), mix, space, weights)
+    return _adjust_one(
+        recipe, centroid, _cat_distance(space, centroid), mix, space, weights
+    )
 
 
+# Adjust n recipes
 def adjust_many(
-    recipes: pd.DataFrame, target: Target, space: SearchSpace, weights: LossWeights = LossWeights()
+    recipes: pd.DataFrame,
+    target: Target,
+    space: SearchSpace,
+    weights: LossWeights = LossWeights(),
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Adjust every recipe toward `target`.
 
@@ -190,11 +246,15 @@ def adjust_many(
     for rid, recipe in recipes.iterrows():
         a = _adjust_one(recipe, centroid, cat_dist, mix, space, weights)
         adjusted.append(a.recipe.rename(rid))
-        info.append({
-            "recipe_id": rid,
-            **{f"loss_{k}": v for k, v in vars(a.loss).items()},
-            "loss_total": a.loss.total,
-            "n_type_changes": a.n_type_changes, "n_added": a.n_added, "n_removed": a.n_removed,
-        })
+        info.append(
+            {
+                "recipe_id": rid,
+                **{f"loss_{k}": v for k, v in vars(a.loss).items()},
+                "loss_total": a.loss.total,
+                "n_type_changes": a.n_type_changes,
+                "n_added": a.n_added,
+                "n_removed": a.n_removed,
+            }
+        )
     logger.debug("adjusted {} recipes toward {}", len(recipes), mix)
     return pd.DataFrame(adjusted), pd.DataFrame(info).set_index("recipe_id")

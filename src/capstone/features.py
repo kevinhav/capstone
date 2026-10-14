@@ -16,7 +16,11 @@ CAT_BLOCK: Final = "cat"
 PREP_STEP: Final = "prep"
 
 
-def build_preprocessor(numeric: Sequence[Col] = NUMERIC, categorical: Sequence[Col] = CATEGORICAL) -> ColumnTransformer:
+# We intentionally z-score because small changes in small ingredients have large impacts
+# A percentage increase in salt/yeast matter far more than percentage increase in flour/water
+def build_preprocessor(
+    numeric: Sequence[Col] = NUMERIC, categorical: Sequence[Col] = CATEGORICAL
+) -> ColumnTransformer:
     """Z-score the numeric ratios and one-hot encode the ingredient types.
 
     Either group may be empty, which makes the transformer reusable for ablations.
@@ -25,7 +29,13 @@ def build_preprocessor(numeric: Sequence[Col] = NUMERIC, categorical: Sequence[C
     if numeric:
         blocks.append((NUM_BLOCK, StandardScaler(), [str(c) for c in numeric]))
     if categorical:
-        blocks.append((CAT_BLOCK, OneHotEncoder(handle_unknown="ignore", sparse_output=False), [str(c) for c in categorical]))
+        blocks.append(
+            (
+                CAT_BLOCK,
+                OneHotEncoder(handle_unknown="ignore", sparse_output=False),
+                [str(c) for c in categorical],
+            )
+        )
     return ColumnTransformer(blocks)
 
 
@@ -49,7 +59,11 @@ def feature_names(pipe: Pipeline) -> list[str]:
 def transform(pipe: Pipeline, X: pd.DataFrame) -> pd.DataFrame:
     """Recipes in the fitted pipeline's feature space, as a labeled frame."""
     prep = preprocessor(pipe)
-    return pd.DataFrame(prep.transform(X[list(prep.feature_names_in_)]), index=X.index, columns=feature_names(pipe))
+    return pd.DataFrame(
+        prep.transform(X[list(prep.feature_names_in_)]),
+        index=X.index,
+        columns=feature_names(pipe),
+    )
 
 
 def scaler_stats(pipe: Pipeline) -> tuple[np.ndarray, np.ndarray]:
@@ -60,7 +74,9 @@ def scaler_stats(pipe: Pipeline) -> tuple[np.ndarray, np.ndarray]:
 
 def category_levels(pipe: Pipeline) -> dict[Col, np.ndarray]:
     """Categories the one-hot encoder learned for each categorical column."""
-    return dict(zip(CATEGORICAL, preprocessor(pipe).named_transformers_[CAT_BLOCK].categories_))
+    return dict(
+        zip(CATEGORICAL, preprocessor(pipe).named_transformers_[CAT_BLOCK].categories_)
+    )
 
 
 def numeric_bounds(reference: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
@@ -73,14 +89,15 @@ def numeric_bounds(reference: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     return pd.Series(lo), pd.Series(hi)
 
 
-def gower_distance(frame: pd.DataFrame, numeric: Sequence[Col] = NUMERIC, categorical: Sequence[Col] = CATEGORICAL) -> pd.DataFrame:
-    """Pairwise Gower distance: range-normalized absolute difference for numeric
-    columns, 0/1 mismatch for categorical columns, averaged over all columns."""
-    parts = []
-    for c in numeric:
-        v = frame[c].to_numpy(dtype=float)
-        parts.append(np.abs(v[:, None] - v[None]) / (v.max() - v.min()))
-    for c in categorical:
-        v = frame[c].to_numpy(dtype=object)
-        parts.append((v[:, None] != v[None]).astype(float))
-    return pd.DataFrame(np.mean(parts, axis=0), index=frame.index, columns=frame.index)
+# Optional approach instead of Euclidiean
+# def gower_distance(frame: pd.DataFrame, numeric: Sequence[Col] = NUMERIC, categorical: Sequence[Col] = CATEGORICAL) -> pd.DataFrame:
+#     """Pairwise Gower distance: range-normalized absolute difference for numeric
+#     columns, 0/1 mismatch for categorical columns, averaged over all columns."""
+#     parts = []
+#     for c in numeric:
+#         v = frame[c].to_numpy(dtype=float)
+#         parts.append(np.abs(v[:, None] - v[None]) / (v.max() - v.min()))
+#     for c in categorical:
+#         v = frame[c].to_numpy(dtype=object)
+#         parts.append((v[:, None] != v[None]).astype(float))
+#     return pd.DataFrame(np.mean(parts, axis=0), index=frame.index, columns=frame.index)

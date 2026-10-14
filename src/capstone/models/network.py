@@ -10,6 +10,7 @@ from capstone.features import transform
 from capstone.models.centroids import affinity, distances, styles
 
 
+# TODO Build visualizations / interactive graph to explore recipe space
 def build_graph(pipe: Pipeline, X: pd.DataFrame, y: pd.Series, k: int = 3) -> nx.Graph:
     """Recipes and style centroids as nodes.
 
@@ -25,19 +26,31 @@ def build_graph(pipe: Pipeline, X: pd.DataFrame, y: pd.Series, k: int = 3) -> nx
     dist, aff = distances(pipe, X), affinity(pipe, X)
     Z = transform(pipe, X)
 
+    # build affinity score graph
     G = nx.Graph()
     for style in styles(pipe):
         G.add_node(style, kind="style", style=style)
     for rid in X.index:
         G.add_node(rid, kind="recipe", style=y[rid], **X.loc[rid, FEATURES].to_dict())
 
+    # Connect nodes to centroids
     for rid in X.index:
         for style in styles(pipe):
-            G.add_edge(rid, style, kind="centroid", distance=dist.loc[rid, style], affinity=aff.loc[rid, style])
+            G.add_edge(
+                rid,
+                style,
+                kind="centroid",
+                distance=dist.loc[rid, style],
+                affinity=aff.loc[rid, style],
+            )
 
+    # Connect neighbor nodes
+    # TODO Only handles one-way edges, need to add bidirectional edges
     knn = kneighbors_graph(Z.values, n_neighbors=k, mode="distance")
     for i, j in zip(*knn.nonzero()):
         a, b = Z.index[i], Z.index[j]
         if not G.has_edge(a, b):
-            G.add_edge(a, b, kind="neighbor", distance=knn[i, j], same_style=y[a] == y[b])
+            G.add_edge(
+                a, b, kind="neighbor", distance=knn[i, j], same_style=y[a] == y[b]
+            )
     return G

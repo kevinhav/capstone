@@ -1,5 +1,26 @@
 from capstone.models.adjust import Adjustment, LossBreakdown, SearchSpace, adjust, adjust_many, build_search_space
 from capstone.models.artifacts import build_artifacts
+from capstone.models.classify import (
+    BASELINE,
+    CHANCE,
+    COMPARED,
+    CVResult,
+    compare_to_baseline,
+    confused_as,
+    cross_validate,
+    cv_permutation_importance,
+    drop_one_feature,
+    feature_group_ablation,
+    logistic_coefficients,
+    make_cv,
+    make_models,
+    model_agreement,
+    model_order,
+    per_class_f1,
+    per_recipe_accuracy,
+    repeat_means,
+    summarize,
+)
 from capstone.models.centroids import (
     AffinityClassifier,
     affinity,
@@ -18,6 +39,25 @@ from capstone.models.centroids import (
 from capstone.models.network import build_graph
 
 __all__ = [
+    "BASELINE",
+    "CHANCE",
+    "COMPARED",
+    "CVResult",
+    "compare_to_baseline",
+    "confused_as",
+    "cross_validate",
+    "cv_permutation_importance",
+    "drop_one_feature",
+    "feature_group_ablation",
+    "logistic_coefficients",
+    "make_cv",
+    "make_models",
+    "model_agreement",
+    "model_order",
+    "per_class_f1",
+    "per_recipe_accuracy",
+    "repeat_means",
+    "summarize",
     "Adjustment",
     "AffinityClassifier",
     "LossBreakdown",

@@ -10,6 +10,9 @@ from capstone.models.centroids import centroid_profile, load_or_fit_centroids
 from capstone.utilities import write_json, write_jsonl
 
 
+# Cache results so we don't have to recompute
+# Will recompute if recipes are added
+# Pipeline changes will NOT trigger recompute
 def build_artifacts() -> Pipeline:
     """Fit (or load) the centroid pipeline and write the processed outputs:
     recipes.jsonl, features.jsonl (transformed space), and centroids.json."""

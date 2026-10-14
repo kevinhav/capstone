@@ -177,6 +177,53 @@ INGREDIENT_UNITS: Final[tuple[IngredientUnit, ...]] = (
 FLOUR_BASIS: Final = 100.0  # baker's percentages are expressed relative to flour = 100
 
 
+# -- display names ----------------------------------------------------------
+
+# each ingredient's amount followed by its type, so tables read one ingredient at a time
+INGREDIENT_ORDER: Final[list[Col]] = [
+    Col.flour_type, Col.water, Col.salt, Col.yeast, Col.yeast_type, Col.fat, Col.fat_type, Col.sugar, Col.sugar_type,
+]
+
+# plain-language names for enum values and columns, shared by the app and the report figures
+LABELS: Final[Mapping[str, str]] = {
+    "neapolitan": "Neapolitan",
+    "new-york": "New York",
+    "sicilian": "Sicilian",
+    "all-purpose": "All-purpose",
+    "bread": "Bread",
+    "high-gluten": "High-gluten",
+    "double_zero": "Tipo 00",
+    "semolina": "Semolina",
+    "active-dry": "Active dry",
+    "instant": "Instant",
+    "fresh": "Fresh",
+    "sourdough-starter": "Sourdough / poolish",
+    "extra-virgin olive oil": "Olive oil",
+    "butter": "Butter",
+    "lard": "Lard",
+    "vegetable oil": "Vegetable oil",
+    "white": "White sugar",
+    "brown": "Brown sugar",
+    "honey": "Honey",
+    "none": "None",
+    Col.flour: "Flour",
+    Col.water: "Water",
+    Col.salt: "Salt",
+    Col.yeast: "Yeast",
+    Col.fat: "Fat",
+    Col.sugar: "Sugar",
+    Col.flour_type: "Flour type",
+    Col.yeast_type: "Yeast type",
+    Col.fat_type: "Fat type",
+    Col.sugar_type: "Sugar type",
+}
+
+
+def label(value: object) -> str:
+    """Display name for an enum value or column."""
+    return LABELS.get(str(value), str(value))
+
+
 # -- pizza size -------------------------------------------------------------
 
 
