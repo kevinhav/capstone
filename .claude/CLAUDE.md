@@ -31,4 +31,17 @@
 - Large changes should always be done on a fresh branch. Use git stash if the current working state is not committes
 - Medium changes should always be done on a fresh commit. Ask the user to confirm committing or stashing current changes before making further edits
 - Small changes do not need an explicit version control process
-- Do not commit or version control data files.
+- Small plain-text data files (e.g. JSONL, CSV, JSON, Markdown) may be committed. When a code change regenerates or corrects one, commit it with that change. Do not commit binary or large data files.
+
+## Report Writing
+
+- The prose in the report (`notebooks/present/report.qmd`) and other written deliverables is Kevin's own writing. Do not write, rewrite, or insert prose into them, including lead-in or explanatory sentences around equations
+- In the report, only add or edit what is explicitly asked for, such as equations, notation, glossary entries, tables of results, and figures. Fill a placeholder with exactly what it asks for and nothing more
+- Explanations, suggested wording, and feedback on the writing go in chat, never into the file
+
+## Mathematical Notation
+
+- The project's shared math notation lives in the "Notation" appendix (`@tbl-notation`) at the end of `notebooks/present/report.qmd`, including its conventions paragraph. Check it before writing any mathematical formula, in the report, notebooks, docs, or code comments, and reuse its symbols
+- If a new symbol is needed, make sure it doesn't clash with an existing one and add it to the glossary table in the same change
+- The report is rendered with Quarto to HTML and PDF, so write plain LaTeX that works in both MathJax and pdflatex (no custom macros, no `\mathbb{1}`). Label equations that are referenced elsewhere (`$$ ... $$ {#eq-name}`) and refer to them with `@eq-name` rather than repeating them
+- Inside markdown table cells, use `\Vert` / `\lvert` instead of a raw `|`, which breaks the table

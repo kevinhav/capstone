@@ -31,4 +31,3 @@ ideas.md
 /data/interim/*
 !/data/interim/.gitkeep
 
-*.ipynb

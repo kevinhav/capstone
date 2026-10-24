@@ -1,0 +1,182 @@
+---
+title: "Figure gallery"
+subtitle: "Every figure family in `capstone.visualizations`, rendered with the report style"
+format:
+  html:
+    fig-format: svg
+    embed-resources: true
+    toc: true
+  pdf:
+    fig-format: pdf
+    geometry: margin=1in
+    toc: true
+execute:
+  echo: false
+  warning: false
+jupyter: python3
+---
+
+```{python}
+#| label: setup
+import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.metrics import pairwise_distances
+
+from capstone import visualizations as viz
+from capstone.config import FEATURES, NUMERIC, STYLES, Col, CVConfig, FrankensteinConfig, LossWeights
+from capstone.data import load_recipes, make_frankensteins
+from capstone.features import transform
+from capstone.models import (
+    BASELINE, COMPARED, adjust, adjust_many, build_graph, build_search_space, centroids, cross_validate,
+    cv_permutation_importance, distances, estimate_mix, load_or_fit_centroids, make_cv, make_models, predict,
+)
+from capstone.utilities import setup_logging
+
+setup_logging("WARNING")
+viz.set_theme()
+
+recipes = load_recipes()
+style = recipes[Col.style]
+pipe = load_or_fit_centroids(recipes)
+space = build_search_space(pipe, recipes)
+frank = make_frankensteins(recipes, FrankensteinConfig(n=120, seed=0))
+```
+
+# Data and features
+
+```{python}
+#| label: fig-features
+#| fig-cap: "Baker's percentages by style. Each dot is a recipe; boxes show the median and interquartile range."
+viz.feature_distributions(recipes);
+```
+
+```{python}
+#| label: fig-types
+#| fig-cap: "Share of each style's recipes using each ingredient type."
+viz.category_shares(recipes);
+```
+
+```{python}
+#| label: fig-gower
+#| fig-cap: "Euclidean distance between recipes in the model's feature space, grouped by style. Darker cells are more similar recipes."
+Z = transform(pipe, recipes)
+viz.distance_matrix(pd.DataFrame(pairwise_distances(Z), Z.index, Z.index), style, colorbar_label="Euclidean distance");
+```
+
+```{python}
+#| label: fig-real-vs-synthetic
+#| fig-cap: "Synthetic recipes reproduce the marginal distribution of each ingredient in the real ones."
+both = pd.concat([recipes.assign(source="Real"), frank.assign(source="Synthetic")])
+viz.feature_distributions(both, by="source");
+```
+
+# Centroids
+
+```{python}
+#| label: fig-pca
+#| fig-cap: "Recipes in the first two principal components of the model's feature space, with each style's centroid."
+Z = transform(pipe, recipes)
+pca = PCA(2).fit(Z)
+pc = [f"PC{i + 1} ({v:.0%})" for i, v in enumerate(pca.explained_variance_ratio_)]
+coords = pd.DataFrame(pca.transform(Z), index=Z.index, columns=pc)
+centers = pd.DataFrame(pca.transform(centroids(pipe)), index=centroids(pipe).index, columns=pc)
+viz.style_scatter(coords, style, centers);
+```
+
+```{python}
+#| label: fig-centroids
+#| fig-cap: "Each style's centroid in standard deviations from the all-recipe mean."
+viz.centroid_heatmap(pipe);
+```
+
+```{python}
+#| label: fig-network
+#| fig-cap: "Recipes and their three nearest neighbors. Dashed edges join recipes of different styles."
+G = build_graph(pipe, recipes, style)
+viz.recipe_network(G, kind="neighbor");
+```
+
+```{python}
+#| label: fig-network-centroid
+#| fig-cap: "Recipes linked to each style centroid, with edge width proportional to affinity."
+viz.recipe_network(G, kind="centroid");
+```
+
+# Classification
+
+```{python}
+#| label: cv
+X, y = recipes[FEATURES], style
+cv = make_cv(CVConfig(n_repeats=4))
+cv_result = cross_validate(make_models(include=COMPARED), X, y, cv)
+```
+
+```{python}
+#| label: fig-cv
+#| fig-cap: "Held-out accuracy across 20 folds (5-fold, repeated 4 times)."
+viz.cv_scores(cv_result.folds, highlight=BASELINE, reference=y.value_counts(normalize=True).max());
+```
+
+```{python}
+#| label: fig-confusion
+#| fig-cap: "Out-of-fold confusion matrices, as the share of each true style."
+viz.confusion_matrices({
+    m: viz.confusion_frame(p["true"], p["pred"])
+    for m, p in cv_result.preds.groupby("model", sort=False) if m in (BASELINE, "logistic regression", "random forest")
+});
+```
+
+```{python}
+#| label: fig-importance
+#| fig-cap: "Held-out permutation importance of each feature for the random forest (mean and spread across folds)."
+imp = cv_permutation_importance(make_models(include=["random forest"])["random forest"], X, y, cv, n_repeats=5)
+viz.importance_plot(imp.mean(axis=1), imp.std(axis=1));
+```
+
+# Adjustment
+
+```{python}
+#| label: fig-before-after
+#| fig-cap: "Distance of synthetic recipes to the target centroid before and after adjustment."
+viz.before_after({
+    t: (distances(pipe, frank)[t], distances(pipe, adjust_many(frank, t, space)[0])[t]) for t in STYLES
+});
+```
+
+```{python}
+#| label: fig-mix
+#| fig-cap: "Style mix of one recipe before and after adjusting it toward an even Neapolitan / New York blend."
+base = recipes.loc["new_york_001"]
+target = {"neapolitan": 0.5, "new-york": 0.5}
+after = adjust(base, target, space).recipe
+viz.style_mix(pd.concat([
+    estimate_mix(pipe, base.to_frame().T).set_axis(["Original"]),
+    estimate_mix(pipe, after.to_frame().T).set_axis(["Adjusted"]),
+    pd.DataFrame([target], index=["Target"]),
+]));
+```
+
+```{python}
+#| label: fig-ternary
+#| fig-cap: "Requested blends and the style mix the adjuster achieved, on the three-style simplex."
+grid = [(a, b, 1 - a - b) for a in np.arange(0, 1.01, 0.25) for b in np.arange(0, 1.01 - a, 0.25)]
+requested = pd.DataFrame(grid, columns=[str(s) for s in STYLES]).round(2)
+adjusted = pd.DataFrame([adjust(frank.iloc[i], r.to_dict(), space).recipe for i, r in requested.iterrows()])
+achieved = estimate_mix(pipe, adjusted.set_axis(requested.index))
+viz.ternary(achieved, requested);
+```
+
+```{python}
+#| label: fig-sweep
+#| fig-cap: "Effect of the type-change weight on adjustments toward Neapolitan."
+sweep = {}
+for w in [0.25, 0.5, 1, 2, 4]:
+    adj, info = adjust_many(frank, "neapolitan", space, LossWeights(type_change=w))
+    sweep[w] = {
+        "Reaches target": (predict(pipe, adj) == "neapolitan").mean(),
+        "Swaps a type": (info["n_type_changes"] > 0).mean(),
+        "Adds an ingredient": (info["n_added"] > 0).mean(),
+    }
+viz.line_plot(pd.DataFrame(sweep).T.rename_axis("Type-change weight"), ylabel="Share of recipes", percent=True, xscale="log");
+```
