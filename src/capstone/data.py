@@ -3,6 +3,8 @@
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Final
+from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
@@ -18,6 +20,7 @@ from capstone.config import (
     OPTIONAL,
     PATHS,
     PROVENANCE,
+    STYLES,
     Col,
     FatType,
     FlourType,
@@ -349,6 +352,49 @@ def load_recipes(path: Path = PATHS.recipes_json) -> pd.DataFrame:
 def load_provenance(path: Path = PATHS.recipes_json) -> pd.DataFrame:
     """Raw source text and per-field conversion mapping for each recipe, indexed by recipe_id."""
     return _read_raw(path).pipe(_index_by_id)[PROVENANCE]
+
+
+# -- summaries --------------------------------------------------------------
+
+TOTAL: Final = "Total"
+
+
+def source_domain(url: str) -> str:
+    """Registered domain of a source URL, dropping subdomains such as www. or us.,
+    e.g. "https://us.gozney.com/blogs/..." -> "gozney.com"."""
+    return ".".join(urlparse(url).netloc.split(".")[-2:])
+
+
+def _with_total_column(counts: pd.DataFrame) -> pd.DataFrame:
+    return counts.assign(**{TOTAL: counts.sum(axis=1)})
+
+
+def _sort_by_total(counts: pd.DataFrame) -> pd.DataFrame:
+    return counts.sort_values(TOTAL, ascending=False, kind="stable")
+
+
+def _with_total_row(counts: pd.DataFrame) -> pd.DataFrame:
+    return pd.concat([counts, counts.sum().to_frame(TOTAL).T])
+
+
+def source_counts(recipes: pd.DataFrame) -> pd.DataFrame:
+    """Number of recipes from each source domain, by style.
+
+    Args:
+        recipes: Output of `load_recipes()`.
+
+    Returns:
+        One row per domain, most recipes first, with a column per style in STYLES order
+        plus a Total column and a final Total row.
+    """
+    domains = recipes[Col.source].map(source_domain).rename(Col.source.value)
+    return (
+        pd.crosstab(domains, recipes[Col.style])
+        .reindex(columns=STYLES, fill_value=0)
+        .pipe(_with_total_column)
+        .pipe(_sort_by_total)
+        .pipe(_with_total_row)
+    )
 
 
 # -- synthetic recipes ------------------------------------------------------

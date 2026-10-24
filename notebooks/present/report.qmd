@@ -22,6 +22,15 @@ jupyter: python3
 #| label: setup
 # SETUP: imports, load_recipes(), style labels, load_or_fit_centroids(recipes).
 # Copy the setup chunk from figures.qmd and trim to what the report uses.
+from IPython.display import Markdown
+
+from capstone.config import label
+from capstone.data import load_recipes, source_counts
+from capstone.utilities import setup_logging
+
+setup_logging("WARNING")
+
+recipes = load_recipes()
 ```
 
 ## Abstract
@@ -36,19 +45,13 @@ Pizza needs no introduction; it is one of the most widely recognized and popular
 
 In particular, consumer interest in at-home pizza making has grown rapidly. Manufacturers specializing in dedicated pizza equipment, such as Ooni and Gozney, have seen remarkable market growth. Gozney Group Limited's filed UK accounts show turnover rising from £12.9M in the financial year ended 31 March 2021 to £60.7M in the year ended 31 March 2024 - four consecutive years of compounding growth, at +111%, +62%, and +37% respectively.[^gozney] Its closest competitor, Ooni, is reported to have reached roughly $200M in annual revenue at its peak, easing to approximately $194M in 2023 as pandemic-era demand normalized.[^ooni]
 
-```{python}
-#| label: fig-market-growth
-# FIGURE (optional): Gozney turnover FY2021-FY2024 (and Ooni 2022-2023 if comparable),
-# small bar or line chart. Values are already cited in the text and footnotes.
-```
-
 Interest in recipes for specific styles has also increased. Among the rising US pizza dough queries of the five years to September 2026, four of the fifteen highest-volume are Neapolitan-specific: "neapolitan pizza dough recipe" and "neapolitan pizza" both carry a search-interest index of 24, and "neapolitan pizza dough" and "neapolitan pizza recipe" both carry 23.[^trends] This indicates real consumer interest in the formulation of specific pizza dough styles.
 
 ![The fifteen highest-volume rising US pizza dough search queries, September 2021 - September 2026](../../figures/pizza_dough_rising_queries_light.svg){fig-align="center" width="90%"}
 
 As such, this paper explores culinary optimization, using pizza a sub-domain, as a machine learning problem, focused on guiding and optimizing pizza dough formulae development. Our goal is to explore the feasibility of using statistical methods and machine learning to classify three popular pizza styles (Neapolitan, New York, and Sicillian) from dough formula, and allow for more efficient development than trial and error.
 
-### Managing Consumer Home Making Variables
+<### Managing Consumer Home Making Variables>
 
 This framework in particular supports the consumer who cooks and develops recipes at home, an environment with a much larger range of variables, including;
 
@@ -61,13 +64,13 @@ This framework in particular supports the consumer who cooks and develops recipe
 
 These types of variables are difficult control, especially from user to user. As such, we propose that dough formulation is the best tool available to a home cook to achieve a particular outcome. As the data for these factors are not available, we can attempt to normalize them and provide the means for a user to fine-tune a formula to their specific environmental factors.
 
-### Additional Applications to Commercial Users
+<### Additional Applications to Commercial Users>
 
 This is not to say the implications are limited to home users. Commercial users may find it useful for product development, no-cost experimentation, and scaling to their particular operations. For example, a pizzeria that specializes in Neapolitan pizzas made with a particular local flour may wish to explore a New York style offering. They would likely wish to differentiate their products sufficiently, while still using the same local flour. Having the ability to take their base recipe and adjust towards a new distinct offering, while keeping their preferred ingredient list, can reduce experimentation cyles and matertial costs.
 
 In short, we expect that our methods could be useful to a wide range of formula developers across sectors.
 
-## Details of dough formulation
+## Background of dough formulation
 
 We have focused much on the dough formulation thus far, ignoring other ingredients, proofing times, shaping techniques, and firing temperatures. While these are certaintly interesting features, it is beyond our scope to attempt to encode each of these factors in a standardized way.
 
@@ -112,11 +115,13 @@ $$
 
 We have briefly mentioned a few pizza styles thus far. Due to the limitation of data, and popularity of the following styles, we have limited our study to Neapolitan, New York, and Sicillian.
 
-Neapolitan: <description of this style of pizza from some official source>
+Neapolitan is the most clearly defined style of pizza. Originating from Naples, Italy, it is characterized by a soft, pillowy, unenriched dough. Usually smaller than other styles, the base of the crust is thin, with a highly aerated perimiter. Neapolitan pizza is defined very clearly by the Associazione Verace Pizza Napoletana (AVPN) Internal Regulations, however in keeping with other styles, this was not used as a definitive centroid (although it is one of the recipes). Neapolitan pizzas are typically baked in extremely hot specific ovens, fueled by hardwoods.
 
-New York: <description fo this style of pizza from some official source>
+New York Style is another well known style originating in New York City, where it is often served as an affordable street food by the slice. These pies are typically much larger and thinner than other styles, with a crisp even crust, baked in commercial ovens.
 
-Sicillian <description fo this style of pizza from some official source>
+Sicillian is not quite as well known, but we've chosen it as many other popular styles, including Detroit, are very similar. It also provides a point of contrast to the other two styles - Sicillian pizza uses a much thicker dough than either New York or Neapolitan, and is generally a much more approachable style of pizza to the consumer sector as it does not require such extreme baking temperatures or dough handling technique.
+
+There are of course many other styles of pizza, but these are well known and typically recognized by their dough more so than other styles.
 
 
 ## Data
@@ -125,25 +130,36 @@ Labeled pizza formulations are not readily available as structured data. As such
 
 We followed the below criteria for identifying expert recipes;
 
-- Published on official company webistes relevant to the domain, such as Gozney, Ooni, and King Arthur
+- Published on official company websites relevant to the domain, such as Gozney, Ooni, and King Arthur
 - Authored by culinarians highly regarded and recognized in their industry, including James Beard award winners Kenji Alt-Lopez, Chris Young, and Ken Forkish
 - Popular recipes in pizza-focused online communities and forms, such as pizza-making.com. Popularity was inferred from the presence of a "stickied" forum post, posts provided by community leaders, or other high-traffic content with community acclaim.
+- Recipes expressed in baker's percentages published on independent websites operated by pizza restaurantours 
 
 ```{python}
 #| label: tbl-sources
+#| tbl-cap: "Recipes per source by style"
 # TABLE: recipe sources by style. Count of recipes per source (domain from the
 # `source` URL, e.g. seriouseats.com, kingarthurbaking.com, pizzamaking.com) x style.
 # Supports the expert-source criteria above.
+# Forum domains aggregate recipes from many authors; flag them with an asterisk.
+MULTI_AUTHOR_SOURCES = ["pizzamaking.com"]
+Markdown(
+    source_counts(recipes)
+    .rename(index={s: f"{s}\\*" for s in MULTI_AUTHOR_SOURCES}, columns=label)
+    .rename_axis("Source")
+    .to_markdown()
+)
 ```
 
+Note that while the New York Style formulas may seem biased by being primarily sourced from \*`pizzamaking.com`, the site is a forum where independent authors have submitted their distinct formulations.
 
-### Data Collection
+<### Data Collection>
 
 Formulations for our targeted styles were gathered ethically, following site scraping rules and requirements. Most recipes were gathered by hand as raw text.
 
 The dough formulation portion of the recipe was then extracted and structured in a common schema. Conversions and normalization of the data was performed deterministically in code. 
 
-### Data Processing
+<### Data Processing>
 
 Recipes were processed by converting nominal measurements of flour, water, salt, and yeast into baker's percentages.
 
@@ -241,7 +257,6 @@ $$ {#eq-features}
 ```
 
 
-
 ## Centroid Affinity Scoring
 
 As mentioned before, we started by developing style centroids in our feature space for each class member; Sicillian, New York, and Neapolitan. We calculate a style centroid vector as the mean of each feature vector of the scaled feature set.
@@ -300,6 +315,8 @@ The affinity scores, distances, and centroids are heavily reliant on the labelin
 
 We trained several classification models on the data to validate the expert labels. We are interested to understand if our expert corpus agrees with itself and the corresponding labels sufficiently, and that there is sufficient signal in the formulas to indicate a particular style. Again we must be clear that these results are based on a small sample set, and should not be taken as classifiers with statistical predictive power.
 
+Rather, we evaluate the classifications of the models and compare to both our affinity scores as well as any clear disagreement on expert labels, indicating an outlier.
+
 
 ```{python}
 #| label: tbl-cv-results
@@ -323,12 +340,65 @@ We trained several classification models on the data to validate the expert labe
 
 ## Optimization
 
-- In feature space, we would often like to minimize distance between a formulation and a centroid
-- In come cases, we may like to find a midpoint between two styles
-  - This is where many other pizza styles can be distinguished
-- Users may not wish to fully change their ingredients - again, a commercial pizzeria that makes their dough with specifically milled flour is unlikely to want to change that ingredient completely
-- We specify a loss function that allows gradient descent towards a centroid (or some space between centroids)
-  - Loss function penalizes ingredients swaps more severly than ratio tweaking
+As describe in our motivations, many formula authors have a specific style or outcome in mind when developing a new dough recipe. This typically involves a decent amount of trial-and-error, in which other uncontrollable factors can be unintentionally introduced. Iterating in this way requires time, supplies, and introduces a degree of randomness to the outcome.
+
+To address this, we introduce an optimization algorithm that attempts to fine-tune a formulation, given a starting formulation and target style, by minimizing the distance between input formulation and a point in formula space (e.g. a style centroid).
+
+This may sound like a simple exercise, however we've considered two points we believe to be important to a user. Firstly, a user has a specific environment which is difficult to comprehensively measure; availability of ingredients, altitude, humidity, equipment, and so on. We assume that the user has some starting formulation they are content with, but that they would like to adjust - this initial input formulation is assumed to encode these environment variables to some degree. Under this assumption, the algorithm attempts to shrink the style distance *minimally*, such that much of the author's original recipe is perserved, while still providing new ingredient vectors that are closer to the target style. 
+
+Secondly, users may wish to retain some ingredients that are not present in a typical style. As an example, many people will not have access to commercial flours commonly used in New York style pizza. Commercial users may advertise their use of local ingredients, including a flour with a specific protein content. A bakery with an organic live fermentation may not want to substitute with commercially produced instant yeast. Thus, the algorithm is also penalized for substituting or removing ingredients entirely.
+
+The algorithm and loss function can be described as;
+
+$$
+\tilde{\mathbf{c}} = \sum_{s \in \mathcal{S}} \omega_s \mathbf{c}_s, \qquad \omega_s \ge 0, \qquad \sum_{s \in \mathcal{S}} \omega_s = 1
+$$ {#eq-target}
+
+$$
+\mathcal{E}(r) = \{ i \in \mathcal{E} : p_i > 0 \}, \qquad
+\mathcal{E}_{\cap} = \mathcal{E}(r) \cap \mathcal{E}(r')
+$$ {#eq-enrichments}
+
+$$
+\begin{aligned}
+L(r' ; r) = {} & \lambda_{\text{target}} \lVert \mathbf{x}' - \tilde{\mathbf{c}} \rVert^2
++ \lambda_{\text{ratio}} \sum_{i \in \{\text{water}, \text{salt}, \text{yeast}\} \cup \mathcal{E}_{\cap}} \big(z'_i - z_i\big)^2 \\
+& + \lambda_{\text{type}} \, \big\lvert \{ i \in \{\text{flour}, \text{yeast}\} \cup \mathcal{E}_{\cap} : t'_i \neq t_i \} \big\rvert \\
+& + \lambda_{\text{remove}} \, \big\lvert \mathcal{E}(r) \setminus \mathcal{E}(r') \big\rvert
++ \lambda_{\text{add}} \, \big\lvert \mathcal{E}(r') \setminus \mathcal{E}(r) \big\rvert
+\end{aligned}
+$$ {#eq-loss}
+
+$$
+\ell_i = \min_{r \in \mathcal{D} :\, p_i^{(r)} > 0} p_i^{(r)}, \qquad
+u_i = \max_{r \in \mathcal{D}} p_i^{(r)}
+$$ {#eq-bounds}
+
+$$
+\begin{aligned}
+r^{*} = \operatorname*{arg\,min}_{r'} \ & L(r' ; r) \\
+\text{subject to} \ & t'_i \in \mathcal{T}_i, && i \in \mathcal{K} \\
+& \ell_i \le p'_i \le u_i, && i \in \{\text{water}, \text{salt}, \text{yeast}\} \cup \mathcal{E}(r') \\
+& p'_i = 0, && i \in \mathcal{E} \setminus \mathcal{E}(r')
+\end{aligned}
+$$ {#eq-optimization}
+
+$$
+\operatorname{clip}_i(v) = \min\left( \max\left( v,\ \frac{\ell_i - \mu_i}{\sigma_i} \right),\ \frac{u_i - \mu_i}{\sigma_i} \right)
+$$ {#eq-clip}
+
+$$
+z'_i =
+\begin{cases}
+\operatorname{clip}_i\left( \dfrac{\lambda_{\text{target}} \tilde{c}_i + \lambda_{\text{ratio}} z_i}{\lambda_{\text{target}} + \lambda_{\text{ratio}}} \right), & i \in \{\text{water}, \text{salt}, \text{yeast}\} \cup \mathcal{E}_{\cap} \\[2ex]
+\operatorname{clip}_i\big( \tilde{c}_i \big), & i \in \mathcal{E}(r') \setminus \mathcal{E}(r) \\[1ex]
+-\mu_i / \sigma_i, & i \in \mathcal{E} \setminus \mathcal{E}(r')
+\end{cases}
+$$ {#eq-ratio-solution}
+
+$$
+\mathbf{t}^{*} = \operatorname*{arg\,min}_{\mathbf{t}' \in \mathcal{T}_{\text{flour}} \times \mathcal{T}_{\text{yeast}} \times \mathcal{T}_{\text{fat}} \times \mathcal{T}_{\text{sugar}}} L\big(r'(\mathbf{t}') ; r\big)
+$$ {#eq-type-search}
 
 
 ## Conclusion
@@ -338,6 +408,10 @@ We trained several classification models on the data to validate the expert labe
 - Are the centroids specific enough to be informative?
 - Can this information be used in dough formulation development?
 - 
+
+## Dataset Statistics {.appendix}
+
+
 
 ## Notation {.appendix}
 
@@ -370,6 +444,19 @@ We trained several classification models on the data to validate the expert labe
 | $\mathbf{c}_s$ | Centroid of style $s$: the mean feature vector of $\mathcal{D}_s$ (@eq-centroid), $\in \mathbb{R}^d$ |
 | $\delta_s(\mathbf{x})$ | Euclidean distance from feature vector $\mathbf{x}$ to centroid $\mathbf{c}_s$ (@eq-distance) |
 | $a_s(\mathbf{x})$ | Affinity of feature vector $\mathbf{x}$ for style $s$ (@eq-affinity) |
+| $r',\ \mathbf{x}',\ z'_i,\ p'_i,\ t'_i$ | A candidate adjustment of formula $r$, and its feature vector, standardized ratios, baker's percentages, and types |
+| $r^{*}$ | The adjusted formula: the candidate that minimizes $L$ (@eq-optimization) |
+| $\omega_s$ | Share of style $s$ in a target blend; $\omega_s = 1$ for a single-style target (@eq-target) |
+| $\tilde{\mathbf{c}}$ | Target point in feature space, the $\omega$-weighted blend of style centroids (@eq-target), $\in \mathbb{R}^d$ |
+| $\tilde{c}_i$ | Coordinate of $\tilde{\mathbf{c}}$ for the standardized ratio $z_i$ |
+| $\mathcal{E}$ | Optional enrichment ingredients: fat, sugar ($\mathcal{E} \subset \mathcal{K}$) |
+| $\mathcal{E}(r)$ | Enrichments present in formula $r$ (@eq-enrichments) |
+| $\mathcal{E}_{\cap}$ | Enrichments present in both $r$ and $r'$ (@eq-enrichments) |
+| $L(r' ; r)$ | Loss of adjusting formula $r$ to candidate $r'$ (@eq-loss) |
+| $\lambda_{\text{target}},\ \lambda_{\text{ratio}},\ \lambda_{\text{type}},\ \lambda_{\text{remove}},\ \lambda_{\text{add}}$ | Loss weights for the pull toward $\tilde{\mathbf{c}}$, ratio changes, type swaps, removed enrichments, and added enrichments (@eq-loss) |
+| $\ell_i,\ u_i$ | Smallest nonzero and largest observed $p_i$ over the corpus (@eq-bounds) |
+| $\operatorname{clip}_i$ | Clamp of a standardized ratio to $[\ell_i, u_i]$ expressed in standard deviations (@eq-clip) |
+| $\mathbf{t}',\ \mathbf{t}^{*}$ | A candidate type assignment $(t'_{\text{flour}}, t'_{\text{yeast}}, t'_{\text{fat}}, t'_{\text{sugar}})$, and the optimal one (@eq-type-search) |
 | $\lVert\mathbf{v}\rVert$ | Euclidean norm of a vector $\mathbf{v}$ |
 | $\lvert\mathcal{A}\rvert$ | Number of elements in a set $\mathcal{A}$ |
 
