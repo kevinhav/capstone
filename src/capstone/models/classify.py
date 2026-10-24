@@ -32,6 +32,7 @@ from capstone.models.centroids import AffinityClassifier
 CLASSIFIER_STEP: Final = "clf"
 BASELINE: Final = "affinity baseline"
 CHANCE: Final = "chance (stratified)"
+MAJORITY: Final = "majority class"
 METRICS: Final = ("accuracy", "macro_f1", "log_loss")
 # the models carried into ablations and per-recipe comparisons (chance and the weaker variants left out)
 COMPARED: Final = (BASELINE, "logistic regression", "k-NN (k=3)", "random forest", "SVM (rbf)")
@@ -62,6 +63,7 @@ class CVResult:
 def _estimators(seed: int) -> dict[str, ClassifierMixin]:
     return {
         CHANCE: DummyClassifier(strategy="stratified", random_state=seed),
+        MAJORITY: DummyClassifier(strategy="most_frequent"),
         BASELINE: AffinityClassifier(),
         "logistic regression": LogisticRegression(C=1.0, max_iter=1000),
         "k-NN (k=3)": KNeighborsClassifier(n_neighbors=3),

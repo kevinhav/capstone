@@ -9,7 +9,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from capstone.config import CATEGORICAL, NUMERIC, OPTIONAL, Col
+from capstone.config import CATEGORICAL, NUMERIC, OPTIONAL, Col, label
 
 NUM_BLOCK: Final = "num"
 CAT_BLOCK: Final = "cat"
@@ -76,6 +76,31 @@ def category_levels(pipe: Pipeline) -> dict[Col, np.ndarray]:
     """Categories the one-hot encoder learned for each categorical column."""
     return dict(
         zip(CATEGORICAL, preprocessor(pipe).named_transformers_[CAT_BLOCK].categories_)
+    )
+
+
+def feature_labels(pipe: Pipeline) -> dict[str, str]:
+    """Readable name for each transformed feature, e.g. 'num__water' -> 'Water' and
+    'cat__flour_type_bread' -> 'Flour type: Bread'."""
+    names = {feature_name(c): label(c) for c in NUMERIC}
+    for col, levels in category_levels(pipe).items():
+        names |= {feature_name(col, k): f"{label(col)}: {label(k)}" for k in levels}
+    return names
+
+
+def ratio_summary(pipe: Pipeline, reference: pd.DataFrame) -> pd.DataFrame:
+    """Per numeric ratio: observed min and max over `reference`, and the fitted scaler's
+    mean and population standard deviation (the mu_i and sigma_i used for z-scoring).
+
+    Args:
+        pipe: Fitted pipeline built on `build_preprocessor()`.
+        reference: Recipes the scaler was fitted on.
+    """
+    mean, scale = scaler_stats(pipe)
+    ratios = reference[NUMERIC]
+    return pd.DataFrame(
+        {"min": ratios.min().to_numpy(), "max": ratios.max().to_numpy(), "mean": mean, "std": scale},
+        index=pd.Index(NUMERIC, name="ingredient"),
     )
 
 

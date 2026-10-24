@@ -1,6 +1,7 @@
 """Recipe data contract, unit/ingredient conversions, loading, and synthetic recipes."""
 
 import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Final
@@ -394,6 +395,79 @@ def source_counts(recipes: pd.DataFrame) -> pd.DataFrame:
         .pipe(_with_total_column)
         .pipe(_sort_by_total)
         .pipe(_with_total_row)
+    )
+
+
+def ingredient_table(recipe: pd.Series, mapping: Mapping[str, Mapping[str, str]]) -> pd.DataFrame:
+    """One recipe as published next to its representation: per ingredient, the source
+    text, its baker's percentage, and its type (blank for water and salt).
+
+    Args:
+        recipe: Row of `load_recipes()`.
+        mapping: That recipe's provenance mapping (a value of `load_provenance()[Col.mapping]`).
+    """
+    rows = {
+        unit.name: {
+            "As published": mapping[unit.name]["raw"],
+            "Baker's %": recipe[unit.ratio] if unit.ratio else FLOUR_BASIS,
+            "Type": recipe[unit.kind] if unit.kind else "",
+        }
+        for unit in INGREDIENT_UNITS
+    }
+    return pd.DataFrame.from_dict(rows, orient="index")
+
+
+# regex over each field's `mapping.method` marking a processing step; a recipe needed the
+# step if any of its fields matches
+PROCESSING_STEPS: Final[Mapping[str, str]] = {
+    "Mass unit converted to grams (oz, lb, kg)": r"(?<!fl_)oz->g|lb->g|kg->g",
+    "Volume converted to grams": r"(?i)density|tsp|tbsp|cup|fl_oz",
+    "Given only as baker's percentages": r"percentage given directly",
+    "Preferment split into flour and water": r"split_starter|poolish fold-in",
+    "Several flours combined": r"summed|dominant flour",
+    "Type defaulted (unstated in source)": r"^manual \(unspecified",
+    "Range or alternative resolved to one value": r"range midpoint|headline value|first-listed",
+}
+
+_FIELD: Final = "field"
+_METHOD: Final = "method"
+
+
+def _mapping_methods(provenance: pd.DataFrame) -> pd.DataFrame:
+    """One row per (recipe, field) with the conversion method recorded for that field."""
+    return pd.DataFrame([
+        {Col.recipe_id.value: rid, _FIELD: field, _METHOD: entry.get(_METHOD, "")}
+        for rid, mapping in provenance[Col.mapping].items()
+        for field, entry in mapping.items()
+    ])
+
+
+def processing_steps(provenance: pd.DataFrame) -> pd.DataFrame:
+    """Which PROCESSING_STEPS each recipe needed, as a boolean frame indexed by recipe_id.
+
+    Args:
+        provenance: Output of `load_provenance()`.
+    """
+    methods = _mapping_methods(provenance)
+    by_recipe = methods.groupby(Col.recipe_id.value)[_METHOD]
+    return pd.DataFrame({step: by_recipe.agg(lambda m, p=pattern: m.str.contains(p).any()) for step, pattern in PROCESSING_STEPS.items()})
+
+
+def processing_counts(provenance: pd.DataFrame, styles: pd.Series) -> pd.DataFrame:
+    """Number of recipes that needed each processing step, by style.
+
+    Args:
+        provenance: Output of `load_provenance()`.
+        styles: Style label per recipe_id.
+
+    Returns:
+        One row per PROCESSING_STEPS entry, a column per style in STYLES order plus Total.
+    """
+    steps = processing_steps(provenance)
+    return (
+        steps.groupby(styles.reindex(steps.index)).sum().T
+        .reindex(columns=STYLES, fill_value=0)
+        .pipe(_with_total_column)
     )
 
 
