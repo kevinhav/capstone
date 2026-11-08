@@ -20,6 +20,7 @@ ideas.md
 
 *.pdf
 *.svg
+!/figures/*.svg
 
 # Data files
 
