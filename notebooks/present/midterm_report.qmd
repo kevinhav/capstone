@@ -1,0 +1,597 @@
+---
+title: "From Flour to Framework: Statistical Analysis, Classification, and Optimization of Pizza Dough"
+subtitle: "An exploration of applied statistics to the culinary arts"
+author: "Kevin Havis"
+format:
+  html:
+    fig-format: svg
+    embed-resources: true
+    toc: true
+  pdf:
+    fig-format: pdf
+    geometry: margin=1in
+    toc: true
+execute:
+  echo: false
+  warning: false
+jupyter: python3
+---
+
+
+```{python}
+#| label: setup
+# SETUP: imports, load_recipes(), style labels, load_or_fit_centroids(recipes).
+# Copy the setup chunk from figures.qmd and trim to what the report uses.
+import matplotlib.pyplot as plt
+import pandas as pd
+from IPython.display import Markdown
+from sklearn.decomposition import PCA
+
+from capstone import visualizations as viz
+from capstone.config import FEATURES, STYLES, Col, CVConfig, label
+from capstone.data import (
+    TOTAL,
+    ingredient_table,
+    load_provenance,
+    load_recipes,
+    processing_counts,
+    source_counts,
+)
+from capstone.features import feature_labels, ratio_summary, transform
+from capstone.models import (
+    BASELINE,
+    COMPARED,
+    MAJORITY,
+    affinity,
+    centroids,
+    cross_validate,
+    distances,
+    load_or_fit_centroids,
+    make_cv,
+    make_models,
+    model_order,
+    predict,
+    summarize,
+)
+from capstone.utilities import setup_logging
+
+setup_logging("WARNING")
+viz.set_theme()
+
+recipes = load_recipes()
+provenance = load_provenance()
+style = recipes[Col.style]
+pipe = load_or_fit_centroids(recipes)
+dist = distances(pipe, recipes)
+own_dist = dist.apply(lambda row: row[style[row.name]], axis=1)
+
+WORKED_EXAMPLE = "neapolitan_001"
+```
+
+## Midterm Update (as of November 8th)
+
+As a reminder, this project builds a curated dataset of expert pizza dough formulations, expressed as baker's percentages, and uses it to classify recipes into Neapolitan, New York, and Sicilian styles by their distance to each style's centroid. It then adjusts a user's own recipe toward a target style while keeping changes to their original ingredients as small as possible, through a publicly hosted Streamlit app.
+
+The project is well underway and a substantial amount of the work has been completed. The remaining work is primarily polishing, UI enhancements, exploring a few other methodologies, and potentially expanding the dataset.
+
+Below are the completed activities thus far.
+
+- The project proposal was accepted, scoping the study to three styles: Neapolitan, New York, and Sicilian
+- A standard recipe schema and intake process have been defined, with documented unit conversion rules and an intake log for each recipe
+- Dataset curation is complete, with room to expand
+    - As a reminder, the dataset is intended to be curated and focused on expert pizza dough formulations, as such, I do not plan for it to be large
+    - The sources and processing steps of each recipe are tracked
+- The data processing pipeline is complete, converting volumes to grams, splitting starters and preferments into flour, water, and yeast, standardizing ingredient types, and calculating baker's percentages in code
+- EDA has been completed
+- The feature space has been defined, with standardized ratios and one-hot encoded ingredient types forming a 20-feature vector
+- Centroid affinity scoring has been completed, giving each recipe a distance and affinity score to each style centroid
+- Centroid classification has been compared to other supervised models, including Random Forest, regression, SVM, and KNN, using repeated k-fold cross-validation against a majority-class baseline
+- The recipe optimization algorithm has been designed and is working as intended, including targets that blend multiple styles
+- The codebase has been organized into a modular Python package with a shared visualization module
+- The application has been deployed and is publicly hosted on Streamlit (https://tinyurl.com/haviscapstoneapp)
+    - The app has multiple pages aimed at non-technical users, including a recipe browser, a formulation tool, and a guide
+- The mathematical formulation of the methods has been written up, with a notation appendix
+- Rough draft has been completed and is included below, including market research supporting the motivation
+
+The code for the project is available on GitHub: https://github.com/kevinhav/capstone
+
+
+## Motivation
+
+The culinary arts is an interesting domain of for the application of machine learning and data science. As an area that is well understood and ubiquitously experienced by humans, the ability to model culinary technique and outcomes is complex. We all recognize and appreciate a good meal when we experience it, however often we speak in terms of qualitative or sensual measures, which can vary drastically between two diners of the same plate. Attempting to apply statistical analysis is not straightforward; producing even the simplest dish involves many hard-to-measure features, such as the wide range and quality of ingredients, the specificity of heat and time measurements, the various techniques and steps, and again the qualitative and personal evaluation of the result. Culinary dishes often do not present well as an optimization problem, as maximizing taste or texture, for example, is not objective. As such, there is little applied data science in the domain outside of the commercial processed food industry, where the output is measured by shelf life and cost more so than the enjoyment of the output.
+
+One sub-domain that circumvents some of these issues is baking. Many baking recipes involve a small list of ingredients, as few as four in many cases - salt, water, flour, and yeast. Additionally, it is quite common to represent these (and any other ingredients) as "baker's percentages", where each ingredient is expressed as a percentage of the amount of flour used. These formulations solve the aforementioned specificity and measurement problems - due to the complex chemical reactions involved in baking, the correct balance and ratios are critical, and so many recipes and dough formula as expressed in such terms. 
+
+Consider then a baker who wishes to develop a new baked good. The baker likely starts with some idea of the type of product; a baguette, a homestyle loaf, or an Italian boule. The baker then relies on their expertise, knowledge, and experience with the target product to develop an initial formula of baker's percentages they believe will approximate the target style. The recipe is prototyped, evaluated, and iterated until the baker is happy with the result. This process, although quite enjoyable, and can be time-consuming and expensive, which is undesirable in a commercial and sometimes residential environment.
+
+We would like to explore the application of data science and machine learning towards expediting this process. Unfortunately, due to the large number of possible leavened and unleavened products, this would require an expansive corpus of detailed, labeled data encoding not only the ingredients, but a myriad of other factors, including kneading time, humidity, fermentation activity, and other many variables that are difficult to control.
+
+While our scope does not allow for the development of such a corpus, we would like to motivate the further study and exploration of this topic. . As such, **we have chosen to perform a pilot study a statistical approach to the analysis, classification, and optimization of pizza dough formulations.**
+
+### Pizza dough formulations as a rising commercial sector
+
+Pizza needs no introduction; it is one of the most widely recognized and popular foods in the world, with many distinct regional variations, a small and economical ingredient list, and can be found at all levels of the culinary spectrum; made in both home kitchens as an economical dinner option, as fast food as a scalable though competitive venture, and listed on fine dining menus as a canvas for exotic ingredients and the chef's vision.
+
+In particular, consumer interest in at-home pizza making has grown rapidly. Manufacturers specializing in dedicated pizza equipment, such as Ooni and Gozney, have seen remarkable market growth. Gozney Group Limited's filed UK accounts show turnover rising from £12.9M in the financial year ended 31 March 2021 to £60.7M in the year ended 31 March 2024 - four consecutive years of compounding growth, at +111%, +62%, and +37% respectively.[^gozney] Its closest competitor, Ooni, is reported to have reached roughly $200M in annual revenue at its peak, easing to approximately $194M in 2023 as pandemic-era demand normalized.[^ooni]
+
+Interest in recipes for specific styles has also increased. Among the rising US pizza dough queries of the five years to September 2026, four of the fifteen highest-volume are Neapolitan-specific: "neapolitan pizza dough recipe" and "neapolitan pizza" both carry a search-interest index of 24, and "neapolitan pizza dough" and "neapolitan pizza recipe" both carry 23.[^trends] This indicates real consumer interest in the formulation of specific pizza dough styles.
+
+![The fifteen highest-volume rising US pizza dough search queries, September 2021 - September 2026](../../figures/pizza_dough_rising_queries_light.svg){fig-align="center" width="90%"}
+
+### Independent Pizza Restaurants and Cost Management.
+
+In the commercial sector, independent pizza restaurants make up more than half of the 75,000 pizza restaurants in the United States, and this sector is growing - reports indicate that independent pizza sees a 20% year-over-year increase in orders nationwide. 
+
+Independent restaurants have also reported challenging environmental factors in their operations driven by increased expenses and narrowing margins. A survey conducted in 2025 by Restaurant65 repoted 91% of surveyed restaurants have seen increased food costs(https://www.pmq.com/pizza-power-report-2026-pizzeria-failure-rate-is-not-what-you-think/). In such a saturated market, the ability to differentiate and compete is critical, and the opportunity cost of a failed product can be high; margins are very thin.
+
+As such, this paper explores culinary optimization, using pizza a sub-domain, as a machine learning problem, focused on guiding and optimizing pizza dough formulae development. Our goal is to explore the feasibility of using statistical methods and machine learning to classify three popular pizza styles (Neapolitan, New York, and Sicillian) from dough formula, and allow for more efficient development than trial and error for both home and professional cooks.
+
+### A Framework for Consumer and Commercial Sectors
+
+This framework in particular supports the consumer who cooks and develops recipes at home, an environment with a much larger range of variables, including;
+
+- Oven temperatures & thermostat accuracy
+- Imprecise volume measurements
+- Inconsistenty & availability of ingredients
+- Limited resources for large volumes of samples
+- Environmental differences, including altitude and humidity
+- Limited resources 
+
+These types of variables are difficult control, especially from user to user. As such, we propose that dough formulation is the best tool available to a home cook to achieve a particular outcome. As the data for these factors are not available, we can attempt to normalize them and provide the means for a user to fine-tune a formula to their specific environmental factors.
+
+This is not to say the implications are limited to home users. Commercial users may find it useful for product development, no-cost experimentation, and scaling to their particular operations. For example, a pizzeria that specializes in Neapolitan pizzas made with a particular local flour may wish to explore a New York style offering. They would likely wish to differentiate their products sufficiently, while still using the same local flour. Having the ability to take their base recipe and adjust towards a new distinct offering, while keeping their preferred ingredient list, can reduce experimentation cyles and matertial costs.
+
+In short, we expect that our methods could be useful to a wide range of formula developers across sectors.
+
+## Background of dough formulation
+
+We have focused much on the dough formulation thus far, ignoring other ingredients, proofing times, shaping techniques, and firing temperatures. While these are certaintly interesting features, it is beyond our scope to attempt to encode each of these factors in a standardized way.
+
+As mentioned before, baking perccentages are numerical features of a dough formla, allowing us a consistent vector representation expressed as;
+
+$$
+r = \big(\mathbf{p},\ t_{\text{flour}},\ t_{\text{yeast}},\ t_{\text{fat}},\ t_{\text{sugar}}\big)
+$$ {#eq-recipe}
+
+Here $\mathbf{p}$ holds the baker's percentages. For each ingredient $i \in \mathcal{I} = \{\text{flour}, \text{water}, \text{salt}, \text{yeast}, \text{fat}, \text{sugar}\}$ with mass $m_i$ in grams, the baker's percentage is its mass relative to the flour:
+
+$$
+p_i = 100 \cdot \frac{m_i}{m_{\text{flour}}}
+$$ {#eq-bakers}
+
+Flour is therefore always $p_{\text{flour}} = 100$. A constant carries no information, so it is left out, and the remaining five ratios form
+
+$$
+\mathbf{p} = (p_{\text{water}},\ p_{\text{salt}},\ p_{\text{yeast}},\ p_{\text{fat}},\ p_{\text{sugar}}) \in \mathbb{R}^5_{\ge 0}.
+$$
+
+Each ingredient $i \in \mathcal{K} = \{\text{flour}, \text{yeast}, \text{fat}, \text{sugar}\}$ also has a type $t_i$, drawn from a fixed vocabulary $\mathcal{T}_i$. For example, $\mathcal{T}_{\text{flour}} = \{\text{all-purpose}, \text{bread}, \text{double zero}, \text{high-gluten}, \text{semolina}\}$. The notation used throughout is collected in @tbl-notation.
+
+This is a natural representation for dough formulas; baking percentages are captured as numerica features, while the classes of these ingredients, such as high-fluten or all-purpose flours, is encoded as categorical. These are the core features that are present in every formula.
+
+```{python}
+#| label: tbl-worked-example
+#| tbl-cap: "Worked example: recipe neapolitan_001 as published and as represented"
+# TABLE: worked example of one corpus recipe, e.g. neapolitan_001.
+# Columns: ingredient | grams as published | baker's % (@eq-bakers) | type.
+# Shows the raw recipe -> r = (p, t) representation of @eq-recipe concretely.
+# Sources mostly publish ounces or volumes rather than grams, so the source text is shown as published.
+Markdown(
+    ingredient_table(recipes.loc[WORKED_EXAMPLE], provenance.loc[WORKED_EXAMPLE, Col.mapping])
+    .assign(Type=lambda t: t["Type"].map(lambda v: label(v) if v else ""))
+    .rename(index=label)
+    .rename_axis("Ingredient")
+    .to_markdown(floatfmt=".2f")
+)
+```
+
+We have allowed for common dough enrichments, including fat such as olive oil, and sugars such as refined white sugar. The presence or absence of these optional ingedients can contain valuable information as to the culinary style of the formula.
+
+An absent enrichment has both a zero ratio and the type $\text{none}$, and the two always go together:
+
+$$
+p_i = 0 \iff t_i = \text{none}, \qquad i \in \{\text{fat}, \text{sugar}\}
+$$
+
+### Pizza Styles
+
+We have briefly mentioned a few pizza styles thus far. Due to the limitation of data, and popularity of the following styles, we have limited our study to Neapolitan, New York, and Sicillian.
+
+Neapolitan is the most clearly defined style of pizza. Originating from Naples, Italy, it is characterized by a soft, pillowy, unenriched dough. Usually smaller than other styles, the base of the crust is thin, with a highly aerated perimiter. Neapolitan pizza is defined very clearly by the Associazione Verace Pizza Napoletana (AVPN) Internal Regulations, however in keeping with other styles, this was not used as a definitive centroid (although it is one of the recipes). Neapolitan pizzas are typically baked in extremely hot specific ovens, fueled by hardwoods.
+
+New York Style is another well known style originating in New York City, where it is often served as an affordable street food by the slice. These pies are typically much larger and thinner than other styles, with a crisp even crust, baked in commercial ovens.
+
+Sicillian is not quite as well known, but we've chosen it as many other popular styles, including Detroit, are very similar. It also provides a point of contrast to the other two styles - Sicillian pizza uses a much thicker dough than either New York or Neapolitan, and is generally a much more approachable style of pizza to the consumer sector as it does not require such extreme baking temperatures or dough handling technique.
+
+There are of course many other styles of pizza, but these are well known and typically recognized by their dough more so than other styles.
+
+
+## Data
+
+Labeled pizza formulations are not readily available as structured data. As such, we have developed a small, well-structured dataset of expert-curated recipes. By focusing on expert recipes, we can establish clear profiles of each pizza style against which to measure other formulations. Imposing constraints will allow us to be confident in our class labels,
+
+We followed the below criteria for identifying expert recipes;
+
+- Published on official company websites relevant to the domain, such as Gozney, Ooni, and King Arthur
+- Authored by culinarians highly regarded and recognized in their industry, including James Beard award winners Kenji Alt-Lopez, Chris Young, and Ken Forkish
+- Popular recipes in pizza-focused online communities and forms, such as pizza-making.com. Popularity was inferred from the presence of a "stickied" forum post, posts provided by community leaders, or other high-traffic content with community acclaim.
+- Recipes expressed in baker's percentages published on independent websites operated by pizza restaurantours 
+
+```{python}
+#| label: tbl-sources
+#| tbl-cap: "Recipes per source by style"
+# TABLE: recipe sources by style. Count of recipes per source (domain from the
+# `source` URL, e.g. seriouseats.com, kingarthurbaking.com, pizzamaking.com) x style.
+# Supports the expert-source criteria above.
+# Forum domains aggregate recipes from many authors; flag them with an asterisk.
+MULTI_AUTHOR_SOURCES = ["pizzamaking.com"]
+Markdown(
+    source_counts(recipes)
+    .rename(index={s: f"{s}\\*" for s in MULTI_AUTHOR_SOURCES}, columns=label)
+    .rename_axis("Source")
+    .to_markdown()
+)
+```
+
+Note that while the New York Style formulas may seem biased by being primarily sourced from \*`pizzamaking.com`, the site is a forum where independent authors have submitted their distinct formulations.
+
+Formulations for our targeted styles were gathered ethically, following site scraping rules and requirements. Most recipes were gathered by hand as raw text.
+
+The dough formulation portion of the recipe was then extracted and structured in a common schema. Conversions and normalization of the data was performed deterministically in code. 
+
+Recipes were processed by converting nominal measurements of flour, water, salt, and yeast into baker's percentages.
+
+Each ingredient mass was divided by the flour mass as in @eq-bakers. When a formula blends several flours, $m_{\text{flour}}$ is their combined mass.
+
+Flour, water, salt, and yeast types were assigned a default value if not specified. Types were normalized to a finite list of options based on our domain knowledge. For example, King Arthur Sir Lancelot is a relatively high-gluten flour product, and as such would be assigned a "high gluten" flour type.
+
+Sourdough starters, poolishes, or other developed bacterial colonies were converted into respective water, flour, and yeast quantities following expert heuristics.
+
+Volume measurements are a common source of inconsistency - these were first converted to metric measurements by expert guided conversions before then computing the remaining vector quantities. Note that formulas using volume measurements are imprecise by nature, and this convention will bias these formulas.
+
+```{python}
+#| label: tbl-conversions
+#| tbl-cap: "Recipes needing each processing step, by style"
+# TABLE (if tracked): how many recipes needed each processing step, e.g. volume -> grams,
+# starter/preferment split, defaulted type, blended flour. See data/raw/intake_log.md
+# and data/raw/conversions.md. Makes the bias caveat above quantifiable.
+# Counted from each field's recorded conversion method; a recipe can need several steps.
+Markdown(processing_counts(provenance, style).rename(columns=label).rename_axis("Processing step").to_markdown())
+```
+
+
+### Contributed dataset of formulae
+
+Our final dataset is a small and curated with reasonable class representation. We would encourage further development of this dataset and be interested in the results.
+
+```{python}
+#| label: tbl-style-counts
+#| tbl-cap: "Processed recipes per style"
+# NOTE: consider generating the counts table above from recipes[Col.style].value_counts()
+# so it stays in sync with data/processed/recipes.jsonl.
+counts = style.value_counts().reindex(STYLES)
+Markdown(
+    pd.concat([counts, pd.Series({TOTAL: counts.sum()})])
+    .rename(index=label)
+    .rename_axis("Style")
+    .to_frame("*n* Processed Recipes")
+    .to_markdown()
+)
+```
+
+While the dataset is smaller than most machine learning tasks would require, we emphasize that the goal of this data is to provide a well labeled, curated, and high quality corpus of formulations. Using this corpus, we can define reasonable centroids in formulation space for each style class, which can be compared against other formula. 
+
+The dataset is also a novel contribution - we have not discovered any similar kind of data that attempts to build a standardized representation of pizza dough formulae (baker's percentages aside) upon which analysis can be conducted. We propose that the dataset could be further developed and curated, adding additional styles, formula, and other features of interest.
+
+```{python}
+#| label: fig-features
+#| fig-cap: "Baker's percentages by style. Each dot is a recipe; boxes show the median and interquartile range."
+# FIGURE: viz.feature_distributions(recipes). Baker's % of each ingredient by style
+# (strip + box). First look at how the styles differ in the raw ratios.
+viz.feature_distributions(recipes);
+```
+
+```{python}
+#| label: fig-types
+#| fig-cap: "Share of each style's recipes using each ingredient type."
+# FIGURE: viz.category_shares(recipes). Share of each style's recipes using each
+# flour / yeast / fat / sugar type.
+viz.category_shares(recipes);
+```
+
+
+## Feature Space
+
+We define here our feature space. 
+
+Each formula is mapped to a feature vector $\mathbf{x} = \phi(r) \in \mathbb{R}^d$ in two steps: the ratios in $\mathbf{p}$ are standardized, and the ingredient types are one-hot encoded.
+
+**Scaling.** The ingredients sit on very different scales. Water ranges from about 57 to 75%, while yeast ranges from about 0.06 to 1.5%. Yet a 0.5-point change in yeast or salt changes the dough far more than a 0.5-point change in hydration. Unscaled distances would be dominated by water, and as such, each ratio in $\mathbf{p}$ is therefore standardized against the reference corpus $\mathcal{D}$, writing $p_i^{(r)}$ for the ratio of ingredient $i$ in recipe $r$:
+
+$$
+z_i = \frac{p_i - \mu_i}{\sigma_i}, \qquad
+\mu_i = \frac{1}{\lvert\mathcal{D}\rvert} \sum_{r \in \mathcal{D}} p_i^{(r)}, \qquad
+\sigma_i^2 = \frac{1}{\lvert\mathcal{D}\rvert} \sum_{r \in \mathcal{D}} \big(p_i^{(r)} - \mu_i\big)^2
+$$ {#eq-zscore}
+
+This gives $\mathbf{z} = (z_{\text{water}}, z_{\text{salt}}, z_{\text{yeast}}, z_{\text{fat}}, z_{\text{sugar}})$. After scaling, a difference of one unit means "one typical spread in that ingredient", whichever ingredient it is.
+
+```{python}
+#| label: tbl-scaling
+#| tbl-cap: "Range and standardization constants of each baker's percentage over the corpus"
+# TABLE: per ingredient in p: min, max, mean (mu_i), standard deviation (sigma_i) over the corpus.
+# Backs the "57 to 75%" / "0.06 to 1.5%" figures in the Scaling paragraph and gives the
+# actual mu_i, sigma_i of @eq-zscore. scaler_stats(pipe) returns mu, sigma.
+Markdown(
+    ratio_summary(pipe, recipes)
+    .rename(index=label, columns={"min": "Min", "max": "Max", "mean": r"Mean $\mu_i$", "std": r"SD $\sigma_i$"})
+    .rename_axis("Ingredient")
+    .to_markdown(floatfmt=".3f")
+)
+```
+
+**Ingredient types.** Each type $t_i$ is one-hot encoded as $\mathbf{h}_i \in \{0,1\}^{\lvert\mathcal{T}_i\rvert}$: a 1 in the position of $t_i$ within $\mathcal{T}_i$ and 0 elsewhere. With $\mathcal{T}_{\text{flour}}$ ordered as listed above, a bread flour formula has $\mathbf{h}_{\text{flour}} = (0, 1, 0, 0, 0)$. For fat and sugar, $\text{none}$ is a level of its own, so an absent enrichment is encoded explicitly rather than as all zeros.
+
+**Feature vector.** Stacking the standardized ratios and the type encodings gives the feature vector:
+
+$$
+\mathbf{x} = \phi(r) =
+\begin{bmatrix}
+\mathbf{z} \\ \mathbf{h}_{\text{flour}} \\ \mathbf{h}_{\text{yeast}} \\ \mathbf{h}_{\text{fat}} \\ \mathbf{h}_{\text{sugar}}
+\end{bmatrix}
+\in \mathbb{R}^d,
+\qquad
+d = 5 + \sum_{i \in \mathcal{K}} \lvert\mathcal{T}_i\rvert
+$$ {#eq-features}
+
+```{python}
+#| label: tbl-feature-vector
+#| tbl-cap: "Feature vector of the worked-example recipe neapolitan_001"
+# TABLE: the same worked-example recipe as tbl-worked-example, shown as its feature vector x:
+# feature name | value, all d = 20 entries (transform(pipe, ...)). Connects @eq-features
+# to real numbers and makes d concrete.
+Markdown(
+    transform(pipe, recipes.loc[[WORKED_EXAMPLE]]).T
+    .set_axis([r"$\mathbf{x}$"], axis=1)
+    .rename(index=feature_labels(pipe))
+    .rename_axis("Feature")
+    .to_markdown(floatfmt=".2f")
+)
+```
+
+
+## Centroid Affinity Scoring
+
+As mentioned before, we started by developing style centroids in our feature space for each class member; Sicillian, New York, and Neapolitan. We calculate a style centroid vector as the mean of each feature vector of the scaled feature set.
+
+$$
+\mathbf{c}_s = \frac{1}{\lvert\mathcal{D}_s\rvert} \sum_{r \in \mathcal{D}_s} \mathbf{x}^{(r)}, \qquad s \in \mathcal{S}
+$$ {#eq-centroid}
+
+Note that this does not give us a realistic formula as the values are scaled representations. Instead, this provides a baseline centroid for each style to futher compare against.
+
+```{python}
+#| label: fig-centroids
+#| fig-cap: "Each style's centroid in standard deviations from the all-recipe mean."
+# FIGURE: viz.centroid_heatmap(pipe). Each style centroid c_s, ratio coordinates in
+# standard deviations, type coordinates as shares.
+viz.centroid_heatmap(pipe);
+```
+
+```{python}
+#| label: fig-pca
+#| fig-cap: "Recipes in the first two principal components of the model's feature space, with each style's centroid."
+# FIGURE: viz.style_scatter on the first two PCA components of x, with centroids marked
+# (see fig-pca in figures.qmd). Shows how separated the styles are around their centroids.
+Z = transform(pipe, recipes)
+pca = PCA(2).fit(Z)
+pc = [f"PC{i + 1} ({v:.0%})" for i, v in enumerate(pca.explained_variance_ratio_)]
+coords = pd.DataFrame(pca.transform(Z), index=Z.index, columns=pc)
+centers = pd.DataFrame(pca.transform(centroids(pipe)), index=centroids(pipe).index, columns=pc)
+viz.style_scatter(coords, style, centers);
+```
+
+We continue by calculating affinity scores for each formula in the corpus. We first measure the scaled distance from a given formula to each style centroid.
+
+We negate and exponentiate these distances to ensure the lowest distance is represented as the highest number as a convention. 
+
+Then, we divide by the total to standardize the distances between zero and 1. The nearest centroid will always have the highest affinity, so in this way we are using it to classify the formula.
+
+$$
+\delta_s(\mathbf{x}) = \lVert \mathbf{x} - \mathbf{c}_s \rVert
+$$ {#eq-distance}
+
+$$
+a_s(\mathbf{x}) = \frac{\exp\big(-\delta_s(\mathbf{x})\big)}{\sum_{s' \in \mathcal{S}} \exp\big(-\delta_{s'}(\mathbf{x})\big)}
+$$ {#eq-affinity}
+
+We use both affinity and distance as key measures. Given a recipe, affinity measures the balance of that recipe between the three centroids. This does not describe how typical of that style the recipe is; a formula could be 100% neapolitan, but extremely far from the actual centroid. Distance then measures how close a formula is to the centroid, or how typical it is of a particular style. 
+
+```{python}
+#| label: tbl-affinity-examples
+#| tbl-cap: "Centroid distances and affinities for three illustrative recipes"
+# TABLE: distances (@eq-distance) and affinities (@eq-affinity) for a few illustrative recipes:
+# a clearly typed one, a misclassified one (neapolitan_001 -> Sicilian), and one far from
+# every centroid but with a confident affinity (new_york_002). Illustrates the paragraph above.
+nearest = predict(pipe, recipes)
+clearly_typed = own_dist[nearest == style].idxmin()  # correctly placed and closest to its own centroid
+examples = [clearly_typed, "neapolitan_001", "new_york_002"]
+Markdown(
+    pd.concat(
+        [
+            style.rename("Label").map(label),
+            nearest.rename("Nearest").map(label),
+            dist.rename(columns=lambda s: rf"$\delta$ {label(s)}"),
+            affinity(pipe, recipes).rename(columns=lambda s: rf"$a$ {label(s)}"),
+        ],
+        axis=1,
+    )
+    .loc[examples]
+    .rename_axis("Recipe")
+    .to_markdown(floatfmt=".2f")
+)
+```
+
+```{python}
+#| label: fig-own-distance
+#| fig-cap: "Distance of each recipe to the centroid of its own labelled style."
+# FIGURE: distance of each recipe to its own label's centroid, by style
+# (viz.strip_box on distances(pipe, recipes)). Shows what a "typical" distance is per style.
+fig, ax = plt.subplots(figsize=viz.figsize("full", 0.3))
+viz.strip_box(ax, {str(s): own_dist[style == s] for s in STYLES})
+ax.set_xlabel(r"Distance to own style centroid $\delta_s(\mathbf{x})$");
+```
+
+The affinity scores, distances, and centroids are heavily reliant on the labeling in our expert corpus. This serves as a baseline, but we will proceed to apply machine learning models to validate the labels.
+
+
+## Classification Models
+
+We trained several classification models on the data to validate the expert labels. We are interested to understand if our expert corpus agrees with itself and the corresponding labels sufficiently, and that there is sufficient signal in the formulas to indicate a particular style. Again we must be clear that these results are based on a small sample set, and should not be taken as classifiers with statistical predictive power.
+
+Rather, we evaluate the classifications of the models and compare to both our affinity scores as well as any clear disagreement on expert labels, indicating an outlier.
+
+
+```{python}
+#| label: tbl-cv-results
+#| tbl-cap: "Held-out accuracy and macro F1 per model, mean ± standard deviation over folds"
+# TABLE: cross-validated results per model (make_models / cross_validate, as in figures.qmd):
+# mean and standard deviation of held-out accuracy (and macro F1), with the majority-class
+# baseline row. Replaces the "<Table of model results>" placeholder.
+cv_config = CVConfig()
+cv_result = cross_validate(make_models(include=[MAJORITY, *COMPARED]), recipes[FEATURES], style, make_cv(cv_config))
+cv_summary = summarize(cv_result.folds, ("accuracy", "macro_f1"))
+Markdown(
+    pd.DataFrame({
+        name: cv_summary[metric]["mean"].map("{:.2f}".format) + " ± " + cv_summary[metric]["std"].map("{:.2f}".format)
+        for metric, name in {"accuracy": "Accuracy", "macro_f1": "Macro F1"}.items()
+    })
+    .rename_axis(f"Model ({cv_config.n_splits}-fold, {cv_config.n_repeats} repeats)")
+    .to_markdown()
+)
+```
+
+```{python}
+#| label: fig-confusion
+#| fig-cap: "Out-of-fold confusion matrices for the affinity baseline and the two best models, as the share of each true style."
+# FIGURE: out-of-fold confusion matrices for the baseline and best models
+# (viz.confusion_matrices). Shows which styles get confused with which.
+best = [m for m in model_order(cv_result.folds) if m not in (BASELINE, MAJORITY)][:2]
+viz.confusion_matrices({
+    m: viz.confusion_frame(p["true"], p["pred"])
+    for m, p in cv_result.preds.groupby("model", sort=False) if m in (BASELINE, *best)
+});
+```
+
+
+
+- The interpretability of supervised models on a small dataset is reduced
+- We train several classifiers on existing data to see if there's real signal in the formulations themselves
+- Model outputs
+- Outlier formulations
+
+## Optimization
+
+As describe in our motivations, many formula authors have a specific style or outcome in mind when developing a new dough recipe. This typically involves a decent amount of trial-and-error, in which other uncontrollable factors can be unintentionally introduced. Iterating in this way requires time, supplies, and introduces a degree of randomness to the outcome.
+
+To address this, we introduce an optimization algorithm that attempts to fine-tune a formulation, given a starting formulation and target style, by minimizing the distance between input formulation and a point in formula space (e.g. a style centroid).
+
+This may sound like a simple exercise, however we've considered two points we believe to be important to a user. Firstly, a user has a specific environment which is difficult to comprehensively measure; availability of ingredients, altitude, humidity, equipment, and so on. We assume that the user has some starting formulation they are content with, but that they would like to adjust - this initial input formulation is assumed to encode these environment variables to some degree. Under this assumption, the algorithm attempts to shrink the style distance *minimally*, such that much of the author's original recipe is perserved, while still providing new ingredient vectors that are closer to the target style. 
+
+Secondly, users may wish to retain some ingredients that are not present in a typical style. As an example, many people will not have access to commercial flours commonly used in New York style pizza. Commercial users may advertise their use of local ingredients, including a flour with a specific protein content. A bakery with an organic live fermentation may not want to substitute with commercially produced instant yeast. Thus, the algorithm is also penalized for substituting or removing ingredients entirely.
+
+The algorithm and loss function can be described as;
+
+$$
+\mathbf{x} = \phi(r), \qquad \mathbf{x}' = \phi(r')
+$$ {#eq-formulas}
+
+$$
+\tilde{\mathbf{c}} = \sum_{s \in \mathcal{S}} \omega_s \mathbf{c}_s, \qquad \omega_s \ge 0, \qquad \sum_{s \in \mathcal{S}} \omega_s = 1
+$$ {#eq-target}
+
+$$
+\begin{aligned}
+\Delta_{\text{ratio}} &= \lVert \mathbf{z}' - \mathbf{z} \rVert^2 \\
+n_{\text{type}} &= \big\lvert \{ i \in \mathcal{K} : t'_i \neq t_i \} \big\rvert \\
+n_{\text{remove}} &= \big\lvert \mathcal{E}(r) \setminus \mathcal{E}(r') \big\rvert \\
+n_{\text{add}} &= \big\lvert \mathcal{E}(r') \setminus \mathcal{E}(r) \big\rvert
+\end{aligned}
+\qquad
+\mathcal{E}(r) = \{ i \in \mathcal{E} : p_i > 0 \}
+$$ {#eq-change-terms}
+
+$$
+C(r' ; r) = \lambda_{\text{ratio}} \Delta_{\text{ratio}} + \lambda_{\text{type}} n_{\text{type}} + \lambda_{\text{remove}} n_{\text{remove}} + \lambda_{\text{add}} n_{\text{add}}
+$$ {#eq-change-cost}
+
+$$
+r^{*} = \operatorname*{arg\,min}_{r'} \Big[ \underbrace{\lambda_{\text{target}} \lVert \mathbf{x}' - \tilde{\mathbf{c}} \rVert^2}_{\text{distance to target}} + \underbrace{C(r' ; r)}_{\text{cost of change}} \Big]
+\quad \text{subject to} \quad \ell_i \le p'_i \le u_i
+$$ {#eq-optimization}
+
+
+## Conclusion
+
+- Do pizza dough formulations carry enough information to indicate a specific style, in absence of other recipe parameters?
+- Are expert labels consistent and can a style be narrowly defined?
+- Are the centroids specific enough to be informative?
+- Can this information be used in dough formulation development?
+- 
+
+## Dataset Statistics {.appendix}
+
+
+
+## Notation {.appendix}
+
+@tbl-notation collects the notation used in this report. Each symbol keeps one meaning throughout.
+
+**Conventions.** Scalars are italic ($p_i$), vectors are bold lowercase ($\mathbf{p}$), and sets are calligraphic ($\mathcal{D}$). Ingredient and type names are set upright, as in $p_{\text{water}}$ or $t_{\text{flour}} = \text{bread}$. The subscript $i$ always ranges over ingredients and the subscript $s$ over styles. A parenthesized superscript names a recipe, as in $p_i^{(r)}$, and is dropped when only one recipe is being discussed. Vectors are column vectors: they are written inline as tuples and stacked vertically in displayed equations.
+
+| Symbol | Meaning |
+|:--|:----------|
+| $r$ | A dough formula (recipe), represented as in @eq-recipe |
+| $\mathcal{D}$ | The reference corpus of curated formulas, $\lvert\mathcal{D}\rvert = 32$ |
+| $\mathcal{I}$ | Ingredients measured by mass: flour, water, salt, yeast, fat, sugar |
+| $\mathcal{K}$ | Ingredients that also have a type: flour, yeast, fat, sugar ($\mathcal{K} \subset \mathcal{I}$) |
+| $i$ | Index over ingredients |
+| $m_i$ | Mass of ingredient $i$, in grams; $m_{\text{flour}}$ is the total of all flours |
+| $p_i$ | Baker's percentage of ingredient $i$ (@eq-bakers) |
+| $\mathbf{p}$ | Ratio vector $(p_{\text{water}}, p_{\text{salt}}, p_{\text{yeast}}, p_{\text{fat}}, p_{\text{sugar}}) \in \mathbb{R}^5_{\ge 0}$ |
+| $t_i$ | Type of ingredient $i \in \mathcal{K}$ |
+| $\mathcal{T}_i$ | Vocabulary of types for ingredient $i \in \mathcal{K}$; includes $\text{none}$ for fat and sugar |
+| $\mu_i,\ \sigma_i$ | Mean and population standard deviation of $p_i$ over the reference recipes (@eq-zscore) |
+| $z_i$ | Standardized ratio of ingredient $i$ (@eq-zscore) |
+| $\mathbf{z}$ | Standardized ratio vector $(z_{\text{water}}, z_{\text{salt}}, z_{\text{yeast}}, z_{\text{fat}}, z_{\text{sugar}}) \in \mathbb{R}^5$ |
+| $\mathbf{h}_i$ | One-hot encoding of $t_i$, $\in \{0,1\}^{\lvert\mathcal{T}_i\rvert}$ |
+| $\phi$ | Feature map from a formula to its feature vector (@eq-features) |
+| $\mathbf{x}$ | Feature vector of a formula, $\mathbf{x} = \phi(r) \in \mathbb{R}^d$ |
+| $d$ | Dimension of the feature space, $5 + \sum_{i \in \mathcal{K}} \lvert\mathcal{T}_i\rvert$ (20 for the current corpus) |
+| $\mathcal{S}$ | Pizza styles: Neapolitan, New York, Sicilian |
+| $s,\ s'$ | Indices over styles in $\mathcal{S}$ |
+| $\mathcal{D}_s$ | Formulas in the corpus labelled with style $s$ ($\mathcal{D}_s \subset \mathcal{D}$) |
+| $\mathbf{c}_s$ | Centroid of style $s$: the mean feature vector of $\mathcal{D}_s$ (@eq-centroid), $\in \mathbb{R}^d$ |
+| $\delta_s(\mathbf{x})$ | Euclidean distance from feature vector $\mathbf{x}$ to centroid $\mathbf{c}_s$ (@eq-distance) |
+| $a_s(\mathbf{x})$ | Affinity of feature vector $\mathbf{x}$ for style $s$ (@eq-affinity) |
+| $r',\ \mathbf{x}',\ \mathbf{z}',\ p'_i,\ t'_i$ | A candidate adjustment of the input formula $r$, and its feature vector, standardized ratios, baker's percentages, and types (@eq-formulas) |
+| $r^{*}$ | The adjusted formula: the candidate that minimizes distance to target plus cost of change (@eq-optimization) |
+| $\omega_s$ | Share of style $s$ in a target blend; $\omega_s = 1$ for a single-style target (@eq-target) |
+| $\tilde{\mathbf{c}}$ | Target point in feature space, the $\omega$-weighted blend of style centroids (@eq-target), $\in \mathbb{R}^d$ |
+| $\mathcal{E}$ | Optional enrichment ingredients: fat, sugar ($\mathcal{E} \subset \mathcal{K}$) |
+| $\mathcal{E}(r)$ | Enrichments present in formula $r$ (@eq-change-terms) |
+| $\Delta_{\text{ratio}}$ | Squared change in standardized ratios between $r$ and $r'$ (@eq-change-terms) |
+| $n_{\text{type}},\ n_{\text{remove}},\ n_{\text{add}}$ | Number of ingredient types swapped, enrichments removed, and enrichments added (@eq-change-terms) |
+| $C(r' ; r)$ | Cost of changing formula $r$ into candidate $r'$ (@eq-change-cost) |
+| $\lambda_{\text{target}},\ \lambda_{\text{ratio}},\ \lambda_{\text{type}},\ \lambda_{\text{remove}},\ \lambda_{\text{add}}$ | Weights for the distance to $\tilde{\mathbf{c}}$, ratio changes, type swaps, removed enrichments, and added enrichments (@eq-change-cost, @eq-optimization) |
+| $\ell_i,\ u_i$ | Smallest nonzero and largest $p_i$ observed in the corpus, bounding the adjusted ratios (@eq-optimization) |
+| $\lVert\mathbf{v}\rVert$ | Euclidean norm of a vector $\mathbf{v}$ |
+| $\lvert\mathcal{A}\rvert$ | Number of elements in a set $\mathcal{A}$ |
+
+: Notation used in this report {#tbl-notation}
+
+[^gozney]: Gozney Group Limited, annual accounts, Companies House company no. 07200046
+
+[^ooni]: Ooni Limited, Annual Report and Consolidated Financial Statements no. 08316049
+
+[^trends]: Google Trends, US web search, "rising queries" report for pizza dough, September 2021 - September 2026 (retrieved 22 September 2026). The reported percentages are Google's rounded growth figures for each query over the period.
