@@ -28,7 +28,7 @@ from IPython.display import Markdown
 from sklearn.decomposition import PCA
 
 from capstone import visualizations as viz
-from capstone.config import FEATURES, STYLES, Col, CVConfig, label
+from capstone.config import FEATURES, INGREDIENT_ORDER, NUMERIC, STYLES, Col, CVConfig, Style, label
 from capstone.data import (
     TOTAL,
     ingredient_table,
@@ -36,13 +36,18 @@ from capstone.data import (
     load_recipes,
     processing_counts,
     source_counts,
+    style_profile,
+    typical_recipes,
 )
 from capstone.features import feature_labels, ratio_summary, transform
 from capstone.models import (
     BASELINE,
     COMPARED,
     MAJORITY,
+    adjust_many,
+    adjustment_summary,
     affinity,
+    build_search_space,
     centroids,
     cross_validate,
     distances,
@@ -52,7 +57,9 @@ from capstone.models import (
     model_order,
     predict,
     summarize,
+    target_distance,
 )
+from capstone.models.adjust import CHANGE_COUNTS, DISTANCE_AFTER, DISTANCE_BEFORE
 from capstone.utilities import setup_logging
 
 setup_logging("WARNING")
@@ -66,6 +73,16 @@ dist = distances(pipe, recipes)
 own_dist = dist.apply(lambda row: row[style[row.name]], axis=1)
 
 WORKED_EXAMPLE = "neapolitan_001"
+
+
+def profile_table(s: Style) -> Markdown:
+    """style_profile of one style as a Markdown table, with its recipe count in the header."""
+    return Markdown(
+        style_profile(recipes, s)
+        .rename(index=label)
+        .rename_axis(f"Ingredient (n = {(style == s).sum()})")
+        .to_markdown(floatfmt=".2f")
+    )
 ```
 
 ## Abstract
@@ -207,19 +224,31 @@ We describe the styles below, informed both by our data and domain knowledge.
 
 Neapolitan is the most clearly defined style of pizza. Originating from Naples, Italy, it is characterized by a soft, pillowy, unenriched dough. Usually smaller than other styles, the base of the crust is thin, with a highly aerated perimiter. Neapolitan pizza is defined very clearly by the Associazione Verace Pizza Napoletana (AVPN) Internal Regulations, however in keeping with other styles, this was not used as a definitive centroid (although it is one of the recipes). Neapolitan pizzas are typically baked in extremely hot ovens, fueled by hardwoods, and charring on the perimter is expected and desired.
 
-__Code block to profile our Neapolitan pizzas data__
+```{python}
+#| label: tbl-profile-neapolitan
+#| tbl-cap: "Neapolitan recipes: median and interquartile range of each baker's percentage, and the most common type with its share of recipes"
+profile_table(Style.neapolitan)
+```
 
 ### New York Style
 
 New York Style is another well known style originating in New York City, where it is often served as an affordable street food by the slice. These pies are typically much larger and thinner than other styles, with a crisp even crust, baked in commercial ovens, albeit at lower temperatures than Neapolitan. These pies are typically made with commercially sourced ingredients in bulk, including concentrated tomato puree, enriched and refined flours, and commercial yeast.
 
-__Code block to profile our New York Pizza data__
+```{python}
+#| label: tbl-profile-new-york
+#| tbl-cap: "New York recipes: median and interquartile range of each baker's percentage, and the most common type with its share of recipes"
+profile_table(Style.new_york)
+```
 
 ### Sicillian
 
 Sicillian pizza also originated in Italy, however in contrast to Neapolitan styles, it is typically much thicker and breadier, similar to foccacia bread. It is baked in a pan, commonly square or rectangular, and served in slices. Sicillian is not quite as well known in the United States, but we've chosen it as many other popular styles, including Detroit, "Grandma Pie", and Roman are quite similar (although we've limited our curated formula to those explicitly labeled as "Sicillian"). It also provides a point of contrast to the other two styles - Sicillian pizza uses a much thicker dough than either New York or Neapolitan, and is generally a much more approachable style of pizza to the consumer sector as it does not require such extreme baking temperatures or dough handling technique.
 
-__Code block to profile Sicillian style recipes__
+```{python}
+#| label: tbl-profile-sicilian
+#| tbl-cap: "Sicilian recipes: median and interquartile range of each baker's percentage, and the most common type with its share of recipes"
+profile_table(Style.sicilian)
+```
 
 
 ## Formulae Dataset
@@ -526,7 +555,21 @@ viz.confusion_matrices({
 
 Before moving on, we'd like to point out a particular outlier formula that all models disagreed on. 
 
-<Add data table for the outlier>
+```{python}
+#| label: tbl-outliers
+#| tbl-cap: "The two recipes every model misclassified, next to each style's typical recipe (median baker's percentage, most common type)"
+OUTLIERS = ["neapolitan_001", "sicilian_010"]
+Markdown(
+    pd.concat(
+        [recipes.loc[OUTLIERS, INGREDIENT_ORDER].T, typical_recipes(recipes).rename(columns=lambda s: f"Typical {label(s)}")],
+        axis=1,
+    )
+    .map(lambda v: f"{v:.2f}" if isinstance(v, float) else label(v))
+    .rename(index=label)
+    .rename_axis("Feature")
+    .to_markdown(disable_numparse=True)
+)
+```
 
 ## Optimizing Towards Target Styles
 
@@ -581,11 +624,38 @@ This approach allows the target to be any point in feature space, the main impli
 
 We demonstrate this movement again in the first two principle component space to make concrete.
 
-__plot to show a new york, sicillian, and neapolitan recipe adjusted towards neapolitan centroid in first two pca space__
+```{python}
+#| label: fig-adjust-pca
+#| fig-cap: "The recipe of each style farthest from the Neapolitan centroid, adjusted toward it, in the principal components of the recipe plot above."
+space = build_search_space(pipe, recipes)
+adjusted, adjust_info = adjust_many(recipes, Style.neapolitan, space)
+farthest = target_distance(pipe, recipes, Style.neapolitan).groupby(style).idxmax().reindex(STYLES).to_list()
+adjusted_coords = pd.DataFrame(pca.transform(transform(pipe, adjusted.loc[farthest])), index=farthest, columns=pc)
+fig = viz.style_scatter(coords, style, centers, alpha=0.3)
+viz.adjustment_arrows(fig.axes[0], coords.loc[farthest], adjusted_coords, style);
+```
 
 As an example, applying this adjustment towards the Neapolitan centroid across the corpus gives us the below changes in formulation
 
-__table to show average ingredient change when all corpus are adjusted towards neapolitan centroid__
+```{python}
+#| label: tbl-adjust-change
+#| tbl-cap: "Mean change when every corpus recipe is adjusted toward the Neapolitan centroid, by original style"
+Markdown(
+    adjustment_summary(recipes, adjusted, adjust_info, Style.neapolitan, pipe)
+    .rename(
+        index=label,
+        columns={
+            **{c: rf"$p'_{{\text{{{c}}}}} - p_{{\text{{{c}}}}}$" for c in NUMERIC},
+            **dict(zip(CHANGE_COUNTS, (r"$n_{\text{type}}$", r"$n_{\text{remove}}$", r"$n_{\text{add}}$"))),
+            DISTANCE_BEFORE: r"$\delta_{\text{Neapolitan}}(\mathbf{x})$",
+            DISTANCE_AFTER: r"$\delta_{\text{Neapolitan}}(\mathbf{x}')$",
+        },
+    )
+    .T
+    .rename_axis("Mean change")
+    .to_markdown(floatfmt=".2f")
+)
+```
 
 ## Conclusion
 

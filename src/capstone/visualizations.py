@@ -454,17 +454,18 @@ def style_scatter(
     ax: Axes | None = None,
     *,
     equal_aspect: bool = True,
+    alpha: float = 0.9,
 ) -> Figure:
     """2-D embedding (PCA, MDS, ...) colored by style. The first two columns of `coords`
     are plotted and name the axes; `centers` (rows = styles, same columns) adds the
-    style centroids as outlined diamonds."""
+    style centroids as outlined diamonds. Lower `alpha` fades the recipes into a backdrop."""
     ax = _new_axes(ax, figsize("full", 0.62))
     x, y = coords.columns[:2]
     groups = _ordered_groups(styles)
     for g in groups:
         m = (styles == g).reindex(coords.index).to_numpy()
         ax.scatter(coords.loc[m, x], coords.loc[m, y], s=22, color=style_color(g), edgecolor=SURFACE,
-                   linewidth=0.6, alpha=0.9, zorder=3)
+                   linewidth=0.6, alpha=alpha, zorder=3)
     handles = _style_handles(groups)
     if centers is not None:
         for g in groups:
@@ -490,6 +491,33 @@ def centroid_heatmap(pipe: Pipeline) -> Figure:
     fig.set_size_inches(figsize(4.4, 0.42))
     return fig
 
+
+
+def adjustment_arrows(ax: Axes, before: pd.DataFrame, after: pd.DataFrame, styles: pd.Series) -> Figure:
+    """Overlay on a `style_scatter` axes: one arrow per recipe from its original position
+    (`before`) to its adjusted one (`after`), both in the scatter's coordinates. Originals are
+    filled and outlined in ink and labeled with their recipe id, adjusted recipes are hollow,
+    and both markers join the legend above the plot."""
+    x, y = before.columns[:2]
+    for rid in before.index:
+        color = style_color(styles[rid])
+        start, end = before.loc[rid, [x, y]], after.loc[rid, [x, y]]
+        ax.annotate("", xy=tuple(end), xytext=tuple(start), zorder=5,
+                    arrowprops={"arrowstyle": "-|>", "color": INK, "linewidth": 1.0, "shrinkA": 5, "shrinkB": 5})
+        ax.scatter(*start, s=45, color=color, edgecolor=INK, linewidth=1.1, zorder=6)
+        ax.scatter(*end, s=45, facecolor=SURFACE, edgecolor=color, linewidth=1.8, zorder=6)
+        away = (start - end).to_numpy(dtype=float)
+        away = 9 * away / (np.linalg.norm(away) or 1)  # label sits behind the arrow's tail
+        ax.annotate(rid, tuple(start), xytext=tuple(away), textcoords="offset points",
+                    ha="left" if away[0] >= 0 else "right", va="bottom" if away[1] >= 0 else "top",
+                    fontsize=BASE_FONT_SIZE - 2, color=INK_SECONDARY, zorder=6)
+    handles = [*ax.get_legend().legend_handles,
+               Line2D([], [], marker="o", linestyle="", markersize=6, markerfacecolor=INK_MUTED,
+                      markeredgecolor=INK, label="Original"),
+               Line2D([], [], marker="o", linestyle="", markersize=6, markerfacecolor=SURFACE,
+                      markeredgecolor=INK_SECONDARY, markeredgewidth=1.6, label="Adjusted")]
+    _top_legend(ax, handles, ncols=3)
+    return ax.figure
 
 # -- classification ---------------------------------------------------------
 

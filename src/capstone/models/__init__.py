@@ -1,4 +1,12 @@
-from capstone.models.adjust import Adjustment, LossBreakdown, SearchSpace, adjust, adjust_many, build_search_space
+from capstone.models.adjust import (
+    Adjustment,
+    LossBreakdown,
+    SearchSpace,
+    adjust,
+    adjust_many,
+    adjustment_summary,
+    build_search_space,
+)
 from capstone.models.artifacts import build_artifacts
 from capstone.models.classify import (
     BASELINE,
@@ -66,6 +74,7 @@ __all__ = [
     "SearchSpace",
     "adjust",
     "adjust_many",
+    "adjustment_summary",
     "affinity",
     "blend_centroid",
     "build_artifacts",

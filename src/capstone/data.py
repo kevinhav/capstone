@@ -16,6 +16,7 @@ from capstone.config import (
     CATEGORICAL,
     FEATURES,
     FLOUR_BASIS,
+    INGREDIENT_ORDER,
     INGREDIENT_UNITS,
     NUMERIC,
     OPTIONAL,
@@ -29,6 +30,7 @@ from capstone.config import (
     Style,
     SugarType,
     YeastType,
+    label,
 )
 
 # -- recipe contract --------------------------------------------------------
@@ -415,6 +417,64 @@ def ingredient_table(recipe: pd.Series, mapping: Mapping[str, Mapping[str, str]]
         for unit in INGREDIENT_UNITS
     }
     return pd.DataFrame.from_dict(rows, orient="index")
+
+
+def _iqr_text(values: pd.Series) -> str:
+    q1, q3 = values.quantile([0.25, 0.75])
+    return f"{q1:.2f}–{q3:.2f}"
+
+
+def _modal_type_text(values: pd.Series) -> str:
+    shares = values.value_counts(normalize=True)
+    return f"{label(shares.index[0])} ({shares.iloc[0]:.0%})"
+
+
+def style_profile(recipes: pd.DataFrame, style: str) -> pd.DataFrame:
+    """Compact profile of one style's recipes, ready to print: per ingredient, the median
+    and interquartile range of its baker's percentage and its most common type with the
+    share of recipes using it (blank where an ingredient has no ratio or no type).
+
+    Args:
+        recipes: Output of `load_recipes()`.
+        style: Style to profile.
+
+    Returns:
+        One row per ingredient in INGREDIENT_UNITS order, with Median, IQR and
+        Most common type columns.
+    """
+    group = recipes[recipes[Col.style] == style]
+    rows = {
+        unit.name: {
+            "Median": group[unit.ratio].median() if unit.ratio else FLOUR_BASIS,
+            "IQR": _iqr_text(group[unit.ratio]) if unit.ratio else "",
+            "Most common type": _modal_type_text(group[unit.kind]) if unit.kind else "",
+        }
+        for unit in INGREDIENT_UNITS
+    }
+    return pd.DataFrame.from_dict(rows, orient="index")
+
+
+def _typical_value(values: pd.Series) -> object:
+    """Median of a ratio column, most common value of a type column."""
+    return values.median() if pd.api.types.is_numeric_dtype(values) else values.mode().iloc[0]
+
+
+def typical_recipes(recipes: pd.DataFrame) -> pd.DataFrame:
+    """Each style's typical recipe: the median baker's percentage of every ratio and the
+    most common value of every type.
+
+    Args:
+        recipes: Output of `load_recipes()`.
+
+    Returns:
+        One column per style in STYLES order, one row per feature in INGREDIENT_ORDER.
+    """
+    return (
+        recipes.groupby(Col.style)[INGREDIENT_ORDER]
+        .agg(_typical_value)
+        .reindex(STYLES)
+        .T
+    )
 
 
 # regex over each field's `mapping.method` marking a processing step; a recipe needed the

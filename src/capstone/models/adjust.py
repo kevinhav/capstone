@@ -18,6 +18,7 @@ of each ingredient, so the search is exact.
 
 from dataclasses import dataclass
 from itertools import product
+from typing import Final
 
 import numpy as np
 import pandas as pd
@@ -30,6 +31,7 @@ from capstone.config import (
     FEATURES,
     NUMERIC,
     OPTIONAL,
+    STYLES,
     Col,
     LossWeights,
     Target,
@@ -40,7 +42,7 @@ from capstone.features import (
     numeric_bounds,
     scaler_stats,
 )
-from capstone.models.centroids import blend_centroid, resolve_target, styles
+from capstone.models.centroids import blend_centroid, resolve_target, styles, target_distance
 
 
 # Data is small enough that we can go through every combination
@@ -258,3 +260,43 @@ def adjust_many(
         )
     logger.debug("adjusted {} recipes toward {}", len(recipes), mix)
     return pd.DataFrame(adjusted), pd.DataFrame(info).set_index("recipe_id")
+
+
+# Summarize a corpus-wide adjustment
+CHANGE_COUNTS: Final = ("n_type_changes", "n_removed", "n_added")
+DISTANCE_BEFORE: Final = "distance_before"
+DISTANCE_AFTER: Final = "distance_after"
+ALL_RECIPES: Final = "All recipes"
+
+
+def adjustment_summary(
+    recipes: pd.DataFrame,
+    adjusted: pd.DataFrame,
+    info: pd.DataFrame,
+    target: Target,
+    pipe: Pipeline,
+) -> pd.DataFrame:
+    """Average change per original style when `recipes` are adjusted toward `target`.
+
+    Args:
+        recipes: Original recipes (with the style column), as passed to `adjust_many`.
+        adjusted: Adjusted recipes from `adjust_many`.
+        info: Per-recipe change counts from `adjust_many`.
+        target: The target passed to `adjust_many`.
+        pipe: Fitted centroid pipeline used to measure distance to the target.
+
+    Returns:
+        One row per style in STYLES order plus an ALL_RECIPES row; columns are the mean
+        change in baker's % per NUMERIC ratio, the mean of each CHANGE_COUNTS count, and the
+        mean distance to the target before and after adjustment.
+    """
+    changes = (
+        (adjusted[NUMERIC] - recipes[NUMERIC])
+        .join(info[list(CHANGE_COUNTS)])
+        .assign(**{
+            DISTANCE_BEFORE: target_distance(pipe, recipes, target),
+            DISTANCE_AFTER: target_distance(pipe, adjusted, target),
+        })
+    )
+    by_style = changes.groupby(recipes[Col.style]).mean().reindex([str(s) for s in STYLES])
+    return pd.concat([by_style, changes.mean().to_frame(ALL_RECIPES).T])
