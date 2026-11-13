@@ -72,19 +72,31 @@ WORKED_EXAMPLE = "neapolitan_001"
 
 ## Motivation
 
-The culinary arts is an interesting domain of for the application of machine learning and data science. As an area that is well understood and ubiquitously experienced by humans, the ability to model culinary technique and outcomes is complex. We all recognize and appreciate a good meal when we experience it, however often we speak in terms of qualitative or sensual measures, which can vary drastically between two diners of the same plate. Attempting to apply statistical analysis is not straightforward; producing even the simplest dish involves many hard-to-measure features, such as the wide range and quality of ingredients, the specificity of heat and time measurements, the various techniques and steps, and again the qualitative and personal evaluation of the result. Culinary dishes often do not present well as an optimization problem, as maximizing taste or texture, for example, is not objective. As such, there is little applied data science in the domain outside of the commercial processed food industry, where the output is measured by shelf life and cost more so than the enjoyment of the output.
+### Culinary Optimization
+
+The culinary arts are a domain in which humans have experimented and explored for our entire cultural existence. Raw ingredients are processed through technique and chemistry to create a complex, highly sensual and subjective outcome. We all recognize and appreciate a good meal when we experience it, even though palettes and preferences can vary drastically between two diners of the same plate. Restaurants strive for consistency in their dishes, home cooks enjoy improving their skills and their creativity, and diners enjoy the results.
+
+Of interest then, is finding ways to enforce or at least improve the consistency of a particular outcome. Food science is a growing field in which this consistency or optimiation of techniques and dishes are explored. A common experiment is AB testing, where the same or at least very similar ingredients are subjected to several different techniques or processes, and some goal or outcome (usually qualitative and subjective) is then measured and compared. This can be effective, however requires much trial and error as well as a broad sample of testers to achieve any kind of reasonable claim.
+
+This leads us to consider; how might we apply statistical analysis and machine learning techniques to expedite or improve such as process?
+
+### Pilot Study in Pizza Dough Formulations
+
+Attempting to apply statistical analysis is not straightforward; producing even the simplest dish involves many hard-to-measure features, such as the wide range and quality of ingredients, the specificity of heat and time measurements, the various techniques and steps, and again the qualitative and personal evaluation of the result. Culinary dishes often do not present well as an optimization problem, as maximizing taste or texture is both subjective as well as difficult to measure. As such, there is little applied data science in the domain outside of the commercial processed food industry, where the output is measured by shelf life and cost more so than the enjoyment of the output.
 
 One sub-domain that circumvents some of these issues is baking. Many baking recipes involve a small list of ingredients, as few as four in many cases - salt, water, flour, and yeast. Additionally, it is quite common to represent these (and any other ingredients) as "baker's percentages", where each ingredient is expressed as a percentage of the amount of flour used. These formulations solve the aforementioned specificity and measurement problems - due to the complex chemical reactions involved in baking, the correct balance and ratios are critical, and so many recipes and dough formula as expressed in such terms. 
 
 Consider then a baker who wishes to develop a new baked good. The baker likely starts with some idea of the type of product; a baguette, a homestyle loaf, or an Italian boule. The baker then relies on their expertise, knowledge, and experience with the target product to develop an initial formula of baker's percentages they believe will approximate the target style. The recipe is prototyped, evaluated, and iterated until the baker is happy with the result. This process, although quite enjoyable, and can be time-consuming and expensive, which is undesirable in a commercial and sometimes residential environment.
 
-We would like to explore the application of data science and machine learning towards expediting this process. Unfortunately, due to the large number of possible leavened and unleavened products, this would require an expansive corpus of detailed, labeled data encoding not only the ingredients, but a myriad of other factors, including kneading time, humidity, fermentation activity, and other many variables that are difficult to control.
+We would like to explore the application of data science and machine learning towards expediting this process. Unfortunately, due to the large number of possible leavened and unleavened products, this would require an expansive corpus of detailed, labeled data encoding not only the ingredients, but a myriad of other factors, including kneading time, humidity, fermentation activity, and other many variables that are difficult to control. At this time, such a corpus is not available.
 
 While our scope does not allow for the development of such a corpus, we would like to motivate the further study and exploration of this topic. . As such, **we have chosen to perform a pilot study a statistical approach to the analysis, classification, and optimization of pizza dough formulations.**
 
-### Pizza dough formulations as a rising commercial sector
+### Growing Pizzaiolos & Equipment Manufactures
 
-Pizza needs no introduction; it is one of the most widely recognized and popular foods in the world, with many distinct regional variations, a small and economical ingredient list, and can be found at all levels of the culinary spectrum; made in both home kitchens as an economical dinner option, as fast food as a scalable though competitive venture, and listed on fine dining menus as a canvas for exotic ingredients and the chef's vision.
+#### Consumer Sector Growth
+
+Pizza needs no introduction; it is one of the most widely recognized and popular foods in the world, with many distinct regional variations, a small and economical ingredient list, and relevancy at all levels of the culinary spectrum. It is made in both home kitchens as an economical dinner option, as fast food as a scalable though competitive venture, and listed on fine dining menus as a canvas for exotic ingredients and the chef's vision.
 
 In particular, consumer interest in at-home pizza making has grown rapidly. Manufacturers specializing in dedicated pizza equipment, such as Ooni and Gozney, have seen remarkable market growth. Gozney Group Limited's filed UK accounts show turnover rising from £12.9M in the financial year ended 31 March 2021 to £60.7M in the year ended 31 March 2024 - four consecutive years of compounding growth, at +111%, +62%, and +37% respectively.[^gozney] Its closest competitor, Ooni, is reported to have reached roughly $200M in annual revenue at its peak, easing to approximately $194M in 2023 as pandemic-era demand normalized.[^ooni]
 
@@ -92,36 +104,51 @@ Interest in recipes for specific styles has also increased. Among the rising US 
 
 ![The fifteen highest-volume rising US pizza dough search queries, September 2021 - September 2026](../../figures/pizza_dough_rising_queries_light.svg){fig-align="center" width="90%"}
 
-### Independent Pizza Restaurants and Cost Management.
+As such, we believe there is interest, both for the consumer and the equipment suppliers, in tooling and statistical analysis that can save time and educate users in their pursuits of a particular expression of piza dough styles, that may be a well established culinary style or something in between.
+
+### Commercial Sector Challenges
 
 In the commercial sector, independent pizza restaurants make up more than half of the 75,000 pizza restaurants in the United States, and this sector is growing - reports indicate that independent pizza sees a 20% year-over-year increase in orders nationwide. 
 
 Independent restaurants have also reported challenging environmental factors in their operations driven by increased expenses and narrowing margins. A survey conducted in 2025 by Restaurant65 repoted 91% of surveyed restaurants have seen increased food costs(https://www.pmq.com/pizza-power-report-2026-pizzeria-failure-rate-is-not-what-you-think/). In such a saturated market, the ability to differentiate and compete is critical, and the opportunity cost of a failed product can be high; margins are very thin.
 
-As such, this paper explores culinary optimization, using pizza a sub-domain, as a machine learning problem, focused on guiding and optimizing pizza dough formulae development. Our goal is to explore the feasibility of using statistical methods and machine learning to classify three popular pizza styles (Neapolitan, New York, and Sicillian) from dough formula, and allow for more efficient development than trial and error for both home and professional cooks.
+As such, we present this paper as a pilot study to explore culinary optimization, focusing on pizza dough formulae as a practical and economic sub-domain. Our goal is to explore the feasibility of using statistical methods and machine learning to classify three popular pizza styles (Neapolitan, New York, and Sicillian) from dough formula, providing a common language and framework for formulae experiementation and development.
 
 ### A Framework for Consumer and Commercial Sectors
 
-This framework in particular supports the consumer who cooks and develops recipes at home, an environment with a much larger range of variables, including;
+This framework in particular supports the consumer who cooks and develops recipes at home. This can be a challenging environment to achieve consistency, as it generally involves many factors that are either uncontrollable or too resource intensive to be feasible. 
+
+Some examples of such variables include;
 
 - Oven temperatures & thermostat accuracy
-- Imprecise volume measurements
-- Inconsistenty & availability of ingredients
+- Differences in oven models and designs, including gas versus electric
+- Use of imprecise volume measurements
+- Inconsistency in consumer products, such as protein content or granule size of flour
+- Availability of ingredients for regional styles 
 - Limited resources for large volumes of samples
 - Environmental differences, including altitude and humidity
-- Limited resources 
 
-These types of variables are difficult control, especially from user to user. As such, we propose that dough formulation is the best tool available to a home cook to achieve a particular outcome. As the data for these factors are not available, we can attempt to normalize them and provide the means for a user to fine-tune a formula to their specific environmental factors.
+These types of variables are difficult to control, especially from user to user. As such, we propose that dough formulation is the best tool available to a home cook to achieve a particular outcome. As the data for these factors are not available, we can attempt to normalize them and provide the means for a user to fine-tune a formula to their specific environmental factors.
 
 This is not to say the implications are limited to home users. Commercial users may find it useful for product development, no-cost experimentation, and scaling to their particular operations. For example, a pizzeria that specializes in Neapolitan pizzas made with a particular local flour may wish to explore a New York style offering. They would likely wish to differentiate their products sufficiently, while still using the same local flour. Having the ability to take their base recipe and adjust towards a new distinct offering, while keeping their preferred ingredient list, can reduce experimentation cyles and matertial costs.
 
 In short, we expect that our methods could be useful to a wide range of formula developers across sectors.
 
-## Background of dough formulation
+## Dough Formulae
 
-We have focused much on the dough formulation thus far, ignoring other ingredients, proofing times, shaping techniques, and firing temperatures. While these are certaintly interesting features, it is beyond our scope to attempt to encode each of these factors in a standardized way.
+As mentioned before, dough formulation is primarily encoded in four main feature vectors; flour, always expressed as 100%, then water, salt, and yeast, expressed as percentages of flour by weight. Many commerical recipes use this format, and it is the standard expression we use here.
 
-As mentioned before, baking perccentages are numerical features of a dough formla, allowing us a consistent vector representation expressed as;
+We extend the dough formulation to address the ingredient types, as well as possible dough enrichments. For example, the wheat flours used in pizza dough can have significantly different compositions, usually measured by protein content ranging from 10-15%. Thoughtful manufacturers will specify these amounts for each of their products. This and other factors, such as granule size, can influence water absorption, making it an important feature.
+
+Similarly, we've allowed for fats as an ingredient, as we found that many formula call for the addition of olive oils, seed oils, or butter. We've included quantities and variables for sugars, including white refined cane sugar, brown sugar, and honey, as we found these were common ingredients as well.
+
+Yeast variety is also a difficult-to-capture variable. While commercially produced instant and active yeasts are generally comparable across manufacturers, local yeasts are not, as they are specific to the environment's microbiome. These yeasts are usually captured as live cultures of flour and water, which some formula use as a direct ingredient. As such, we allow for specifiying the yeast used as a feature.
+
+We do not currently allow for specific water or salt categorical variables.
+
+### Formulae as Vectors
+
+Baker's perecentages can be represented as a vector such as;
 
 $$
 r = \big(\mathbf{p},\ t_{\text{flour}},\ t_{\text{yeast}},\ t_{\text{fat}},\ t_{\text{sugar}}\big)
@@ -141,7 +168,7 @@ $$
 
 Each ingredient $i \in \mathcal{K} = \{\text{flour}, \text{yeast}, \text{fat}, \text{sugar}\}$ also has a type $t_i$, drawn from a fixed vocabulary $\mathcal{T}_i$. For example, $\mathcal{T}_{\text{flour}} = \{\text{all-purpose}, \text{bread}, \text{double zero}, \text{high-gluten}, \text{semolina}\}$. The notation used throughout is collected in @tbl-notation.
 
-This is a natural representation for dough formulas; baking percentages are captured as numerica features, while the classes of these ingredients, such as high-fluten or all-purpose flours, is encoded as categorical. These are the core features that are present in every formula.
+This is a natural representation for dough formulas; baking percentages are captured as numerical features, while the classes of these ingredients, such as high-gluten or all-purpose flours, is encoded as categorical. These are the core features that are present in every formula. Below is an example of one such formula in the schema of our dataset.
 
 ```{python}
 #| label: tbl-worked-example
@@ -159,30 +186,49 @@ Markdown(
 )
 ```
 
-We have allowed for common dough enrichments, including fat such as olive oil, and sugars such as refined white sugar. The presence or absence of these optional ingedients can contain valuable information as to the culinary style of the formula.
 
-An absent enrichment has both a zero ratio and the type $\text{none}$, and the two always go together:
+Enrichments, such as sugar or fats, are optionally included. An absent enrichment has both a zero ratio and the type $\text{none}$, and the two always go together:
 
 $$
 p_i = 0 \iff t_i = \text{none}, \qquad i \in \{\text{fat}, \text{sugar}\}
 $$
 
-### Pizza Styles
+### Other Variables
 
-We have briefly mentioned a few pizza styles thus far. Due to the limitation of data, and popularity of the following styles, we have limited our study to Neapolitan, New York, and Sicillian.
+We have focused much on the dough formulation thus far, ignoring other ingredients, proofing times, shaping techniques, and firing temperatures. While these are certaintly important  features to the end product, it is beyond our scope and available data to attempt to encode each of these factors in a standardized way. This is one area in which we would be very interested to see developed.
 
-Neapolitan is the most clearly defined style of pizza. Originating from Naples, Italy, it is characterized by a soft, pillowy, unenriched dough. Usually smaller than other styles, the base of the crust is thin, with a highly aerated perimiter. Neapolitan pizza is defined very clearly by the Associazione Verace Pizza Napoletana (AVPN) Internal Regulations, however in keeping with other styles, this was not used as a definitive centroid (although it is one of the recipes). Neapolitan pizzas are typically baked in extremely hot specific ovens, fueled by hardwoods.
+## Pizza Styles
 
-New York Style is another well known style originating in New York City, where it is often served as an affordable street food by the slice. These pies are typically much larger and thinner than other styles, with a crisp even crust, baked in commercial ovens.
+We have briefly mentioned a few pizza styles thus far. Due to the limitation of data, and popularity of the following styles, we have limited our study to Neapolitan, New York, and Sicillian. These styles are well-recognized (both from a culinary perspective as well as a commercial product), have regional and cultural distinction, and as such are good candidates to compare and contrast.
 
-Sicillian is not quite as well known, but we've chosen it as many other popular styles, including Detroit, are very similar. It also provides a point of contrast to the other two styles - Sicillian pizza uses a much thicker dough than either New York or Neapolitan, and is generally a much more approachable style of pizza to the consumer sector as it does not require such extreme baking temperatures or dough handling technique.
+We describe the styles below, informed both by our data and domain knowledge.
 
-There are of course many other styles of pizza, but these are well known and typically recognized by their dough more so than other styles.
+### Neapolitan
+
+Neapolitan is the most clearly defined style of pizza. Originating from Naples, Italy, it is characterized by a soft, pillowy, unenriched dough. Usually smaller than other styles, the base of the crust is thin, with a highly aerated perimiter. Neapolitan pizza is defined very clearly by the Associazione Verace Pizza Napoletana (AVPN) Internal Regulations, however in keeping with other styles, this was not used as a definitive centroid (although it is one of the recipes). Neapolitan pizzas are typically baked in extremely hot ovens, fueled by hardwoods, and charring on the perimter is expected and desired.
+
+__Code block to profile our Neapolitan pizzas data__
+
+### New York Style
+
+New York Style is another well known style originating in New York City, where it is often served as an affordable street food by the slice. These pies are typically much larger and thinner than other styles, with a crisp even crust, baked in commercial ovens, albeit at lower temperatures than Neapolitan. These pies are typically made with commercially sourced ingredients in bulk, including concentrated tomato puree, enriched and refined flours, and commercial yeast.
+
+__Code block to profile our New York Pizza data__
+
+### Sicillian
+
+Sicillian pizza also originated in Italy, however in contrast to Neapolitan styles, it is typically much thicker and breadier, similar to foccacia bread. It is baked in a pan, commonly square or rectangular, and served in slices. Sicillian is not quite as well known in the United States, but we've chosen it as many other popular styles, including Detroit, "Grandma Pie", and Roman are quite similar (although we've limited our curated formula to those explicitly labeled as "Sicillian"). It also provides a point of contrast to the other two styles - Sicillian pizza uses a much thicker dough than either New York or Neapolitan, and is generally a much more approachable style of pizza to the consumer sector as it does not require such extreme baking temperatures or dough handling technique.
+
+__Code block to profile Sicillian style recipes__
 
 
-## Data
+## Formulae Dataset
 
-Labeled pizza formulations are not readily available as structured data. As such, we have developed a small, well-structured dataset of expert-curated recipes. By focusing on expert recipes, we can establish clear profiles of each pizza style against which to measure other formulations. Imposing constraints will allow us to be confident in our class labels,
+### Sourcing Expert Formulae
+
+Labeled pizza formulations are not readily available as structured data. While there are many pizza recipes widely available online, there is no guarantee or assurance of the quality or accuracy of their labeling. Our interest is in fact to classify and optimize such recipes towards a style definition that has wide support from expert pizzialo and is evidenced by data.
+
+As such, we have developed a small, well-structured dataset of expert-curated recipes. By focusing on expert recipes, we can establish clear profiles of each pizza style against which to measure other formulations. 
 
 We followed the below criteria for identifying expert recipes;
 
@@ -207,13 +253,13 @@ Markdown(
 )
 ```
 
-Note that while the New York Style formulas may seem biased by being primarily sourced from \*`pizzamaking.com`, the site is a forum where independent authors have submitted their distinct formulations.
+Note that while the New York Style formulas may seem biased by being primarily sourced from \*`pizzamaking.com`, the site acts as an aggregator of recipes submitted by independent authors.
 
 Formulations for our targeted styles were gathered ethically, following site scraping rules and requirements. Most recipes were gathered by hand as raw text.
 
-The dough formulation portion of the recipe was then extracted and structured in a common schema. Conversions and normalization of the data was performed deterministically in code. 
+### Processing, Normalization, and Conversions
 
-Recipes were processed by converting nominal measurements of flour, water, salt, and yeast into baker's percentages.
+The dough formulation portion of the recipe was then extracted and structured in a common schema. Recipes were processed by converting nominal measurements of flour, water, salt, and yeast into baker's percentages.
 
 Each ingredient mass was divided by the flour mass as in @eq-bakers. When a formula blends several flours, $m_{\text{flour}}$ is their combined mass.
 
@@ -257,6 +303,17 @@ While the dataset is smaller than most machine learning tasks would require, we 
 
 The dataset is also a novel contribution - we have not discovered any similar kind of data that attempts to build a standardized representation of pizza dough formulae (baker's percentages aside) upon which analysis can be conducted. We propose that the dataset could be further developed and curated, adding additional styles, formula, and other features of interest.
 
+### Distinguishing Data Points
+
+We highlight some interesting summary metrics on the dataset here as descriptive statistics. 
+
+Our experts appear to agree that fat and sugar have no place in a Neapolitan dough, leaving it relatively unenriched. It also tends to use a significantly higher amount of salt than the others, with a median of a percentage higher than other styles. As a culinary product, Neapolitan is often considered a simple and elegant dough.
+
+Sicillian has a very high hydration ratio - typically 70% of water to flour for this style. It also is more common to see fats added, with a median content of 2.5%, but a relatively wide IQR - some recipes even call for no fat.
+
+We can see that New York style sits almost in between and is less distinguished than the other two styles. Sugar appears to be a common additive, likely both as a food for the yeast culture as well as to promote browning.
+
+
 ```{python}
 #| label: fig-features
 #| fig-cap: "Baker's percentages by style. Each dot is a recipe; boxes show the median and interquartile range."
@@ -264,6 +321,10 @@ The dataset is also a novel contribution - we have not discovered any similar ki
 # (strip + box). First look at how the styles differ in the raw ratios.
 viz.feature_distributions(recipes);
 ```
+
+The differences between styles are arguably more clear from the type of ingredients used. Immediately, we can see that Neapolitan almost exclusively favors finely milled "Tipo 00" flours, which have lower protein content, while New York favors the widely available bread flour and commercially sourced high-gluten flours, both with higher protein. 
+
+Instant yeast dominates its category, likely due to the stability, predictability, and convenience. Neapolitan recipes do allow for a fresh yeast, but not as often. As noted before, Neapolitan is the only style that consistently does not require fat.
 
 ```{python}
 #| label: fig-types
@@ -273,10 +334,11 @@ viz.feature_distributions(recipes);
 viz.category_shares(recipes);
 ```
 
+We hope this data is informative and provides inspiration to aspiring pizzialos, if nothing else. The rest of this document describes (in more technical language) the process we used to create style centroids and the formula adjustment algorithm.
 
 ## Feature Space
 
-We define here our feature space. 
+We define here our feature space.
 
 Each formula is mapped to a feature vector $\mathbf{x} = \phi(r) \in \mathbb{R}^d$ in two steps: the ratios in $\mathbf{p}$ are standardized, and the ingredient types are one-hot encoded.
 
@@ -336,13 +398,13 @@ Markdown(
 
 ## Centroid Affinity Scoring
 
-As mentioned before, we started by developing style centroids in our feature space for each class member; Sicillian, New York, and Neapolitan. We calculate a style centroid vector as the mean of each feature vector of the scaled feature set.
+As mentioned before, we started by developing style centroids in our feature space for each class member; Sicillian, New York, and Neapolitan. We calculate a style centroid vector as the mean of each feature vector of the scaled feature set. We can represent the style centroid as;
 
 $$
 \mathbf{c}_s = \frac{1}{\lvert\mathcal{D}_s\rvert} \sum_{r \in \mathcal{D}_s} \mathbf{x}^{(r)}, \qquad s \in \mathcal{S}
 $$ {#eq-centroid}
 
-Note that this does not give us a realistic formula as the values are scaled representations. Instead, this provides a baseline centroid for each style to futher compare against.
+Note that this does not give us a realistic formula as the values are scaled representations. Instead, this provides a baseline centroid for each style to futher compare against. The below matrix shows the general z score for each ingredient, for each style - note the -0.71 in "fat" for Neapolitan, consistent to our observations earlier.
 
 ```{python}
 #| label: fig-centroids
@@ -350,19 +412,6 @@ Note that this does not give us a realistic formula as the values are scaled rep
 # FIGURE: viz.centroid_heatmap(pipe). Each style centroid c_s, ratio coordinates in
 # standard deviations, type coordinates as shares.
 viz.centroid_heatmap(pipe);
-```
-
-```{python}
-#| label: fig-pca
-#| fig-cap: "Recipes in the first two principal components of the model's feature space, with each style's centroid."
-# FIGURE: viz.style_scatter on the first two PCA components of x, with centroids marked
-# (see fig-pca in figures.qmd). Shows how separated the styles are around their centroids.
-Z = transform(pipe, recipes)
-pca = PCA(2).fit(Z)
-pc = [f"PC{i + 1} ({v:.0%})" for i, v in enumerate(pca.explained_variance_ratio_)]
-coords = pd.DataFrame(pca.transform(Z), index=Z.index, columns=pc)
-centers = pd.DataFrame(pca.transform(centroids(pipe)), index=centroids(pipe).index, columns=pc)
-viz.style_scatter(coords, style, centers);
 ```
 
 We continue by calculating affinity scores for each formula in the corpus. We first measure the scaled distance from a given formula to each style centroid.
@@ -416,14 +465,27 @@ viz.strip_box(ax, {str(s): own_dist[style == s] for s in STYLES})
 ax.set_xlabel(r"Distance to own style centroid $\delta_s(\mathbf{x})$");
 ```
 
-The affinity scores, distances, and centroids are heavily reliant on the labeling in our expert corpus. This serves as a baseline, but we will proceed to apply machine learning models to validate the labels.
+The affinity scores, distances, and centroids are heavily reliant on the labeling in our expert corpus. This serves as a baseline, but we will proceed to apply machine learning models to validate the labels. To help make this concrete, below is a two dimensional view of what these centroids might look like when feature space dimensionality is reduced to the first two principle components.
+
+```{python}
+#| label: fig-pca
+#| fig-cap: "Recipes in the first two principal components of the model's feature space, with each style's centroid."
+# FIGURE: viz.style_scatter on the first two PCA components of x, with centroids marked
+# (see fig-pca in figures.qmd). Shows how separated the styles are around their centroids.
+Z = transform(pipe, recipes)
+pca = PCA(2).fit(Z)
+pc = [f"PC{i + 1} ({v:.0%})" for i, v in enumerate(pca.explained_variance_ratio_)]
+coords = pd.DataFrame(pca.transform(Z), index=Z.index, columns=pc)
+centers = pd.DataFrame(pca.transform(centroids(pipe)), index=centroids(pipe).index, columns=pc)
+viz.style_scatter(coords, style, centers);
+```
 
 
 ## Classification Models
 
-We trained several classification models on the data to validate the expert labels. We are interested to understand if our expert corpus agrees with itself and the corresponding labels sufficiently, and that there is sufficient signal in the formulas to indicate a particular style. Again we must be clear that these results are based on a small sample set, and should not be taken as classifiers with statistical predictive power.
+We trained several classification models on the data to validate the expert labels. We are interested to understand if our expert corpus agrees with itself and the corresponding labels sufficiently, and if there is learnable signal in the data to differentiate between styles. Again we must be clear that these results are based on a small sample set, and the predictive outputs will have wide standard errors. 
 
-Rather, we evaluate the classifications of the models and compare to both our affinity scores as well as any clear disagreement on expert labels, indicating an outlier.
+We evaluate the classifications of the models and compare to both our affinity scores as well as any clear disagreement on expert labels, indicating an outlier. We use cross validation to reduce the effect of biased sample error for all models and report performance in terms of F1 score. We've included both the affinity score majority and class majority as baselines.
 
 
 ```{python}
@@ -445,6 +507,11 @@ Markdown(
 )
 ```
 
+
+Our models do outperform class majority base rates, indicating that there is predictive signal. We also see a high degree of congruency between the models, with a few outliers, suggesting that indeed the corpus agrees with its class labeling. The affinity baseline also does quite well compared to the statistical models, implying that it is a reasonable choice for assigning class membership. 
+
+In our testing, all models agreed amongst themselves about 49% of the corpus, and with the experts as well about 47%. Interestingly, each of our top three models seemed biased for accuracy towards one of each style; the affinity baseline for Sicillian, random forest for Neapolitan, and SVM for New York.
+
 ```{python}
 #| label: fig-confusion
 #| fig-cap: "Out-of-fold confusion matrices for the affinity baseline and the two best models, as the share of each true style."
@@ -457,32 +524,35 @@ viz.confusion_matrices({
 });
 ```
 
+Before moving on, we'd like to point out a particular outlier formula that all models disagreed on. 
 
+<Add data table for the outlier>
 
-- The interpretability of supervised models on a small dataset is reduced
-- We train several classifiers on existing data to see if there's real signal in the formulations themselves
-- Model outputs
-- Outlier formulations
+## Optimizing Towards Target Styles
 
-## Optimization
+As described in our motivations, many formula authors have a specific style or outcome in mind when developing a new dough recipe. This typically involves a decent amount of trial-and-error, in which other uncontrollable factors can be unintentionally introduced. Iterating in this way requires time, supplies, and introduces a degree of randomness to the outcome.
 
-As describe in our motivations, many formula authors have a specific style or outcome in mind when developing a new dough recipe. This typically involves a decent amount of trial-and-error, in which other uncontrollable factors can be unintentionally introduced. Iterating in this way requires time, supplies, and introduces a degree of randomness to the outcome.
+To address this, we introduce an optimization algorithm that attempts to fine-tune a formulation, given a starting formulation and target style, by minimizing the distance between input formulation and a point in formula space (e.g. a style centroid). We recognize that a blend of two styles may be desirable, so we generalize the target to any point in the feature space, instead of a specific style centroid.
 
-To address this, we introduce an optimization algorithm that attempts to fine-tune a formulation, given a starting formulation and target style, by minimizing the distance between input formulation and a point in formula space (e.g. a style centroid).
+In developing this algorithm, we've accomodated two additional points we believe to be important to a pizzialo, as well as an assumption.
 
-This may sound like a simple exercise, however we've considered two points we believe to be important to a user. Firstly, a user has a specific environment which is difficult to comprehensively measure; availability of ingredients, altitude, humidity, equipment, and so on. We assume that the user has some starting formulation they are content with, but that they would like to adjust - this initial input formulation is assumed to encode these environment variables to some degree. Under this assumption, the algorithm attempts to shrink the style distance *minimally*, such that much of the author's original recipe is perserved, while still providing new ingredient vectors that are closer to the target style. 
+Firstly, a user has a specific environment which is difficult to comprehensively measure; availability of ingredients, altitude, humidity, equipment, and so on. We assume that the user has some starting formulation (or is willing to choose a starting formulation) they are content with, but that they would like to adjust - this initial input formulation is assumed to encode these environment variables to some degree. Under this assumption, the algorithm attempts to shrink the style distance *minimally*, such that much of the author's original recipe is perserved, while still providing new ingredient vectors that are closer to the target style. 
 
-Secondly, users may wish to retain some ingredients that are not present in a typical style. As an example, many people will not have access to commercial flours commonly used in New York style pizza. Commercial users may advertise their use of local ingredients, including a flour with a specific protein content. A bakery with an organic live fermentation may not want to substitute with commercially produced instant yeast. Thus, the algorithm is also penalized for substituting or removing ingredients entirely.
+Secondly, users may wish to retain some ingredients that are not present in a typical style. As an example, many home cooks will not have access to commercial flours commonly used in New York style pizza. Restaurants may advertise their use of local ingredients, including a flour with a specific protein content. A bakery with an organic live yeast culture may not want to substitute with commercially produced instant yeast. Thus, the algorithm is also penalized for substituting or removing ingredients entirely.
 
-The algorithm and loss function can be described as;
+Considering two formula vectors, $\mathbf{x}$ as the original and $\mathbf{x}`$ as the target;
 
 $$
 \mathbf{x} = \phi(r), \qquad \mathbf{x}' = \phi(r')
 $$ {#eq-formulas}
 
+We assume the formula meets the baker's percentage representation, such that;
+
 $$
 \tilde{\mathbf{c}} = \sum_{s \in \mathcal{S}} \omega_s \mathbf{c}_s, \qquad \omega_s \ge 0, \qquad \sum_{s \in \mathcal{S}} \omega_s = 1
 $$ {#eq-target}
+
+We define the criterion for each ingredient type; squared difference between target and original, and the penalty for presence or absence of each optional enrichment ingredient.
 
 $$
 \begin{aligned}
@@ -495,15 +565,27 @@ n_{\text{add}} &= \big\lvert \mathcal{E}(r') \setminus \mathcal{E}(r) \big\rvert
 \mathcal{E}(r) = \{ i \in \mathcal{E} : p_i > 0 \}
 $$ {#eq-change-terms}
 
+Our cost formula is then represented as the linear combination of these losses
+
 $$
 C(r' ; r) = \lambda_{\text{ratio}} \Delta_{\text{ratio}} + \lambda_{\text{type}} n_{\text{type}} + \lambda_{\text{remove}} n_{\text{remove}} + \lambda_{\text{add}} n_{\text{add}}
 $$ {#eq-change-cost}
 
+Finally, our adjusted recipe $r^{*}$ is the minimum value of the combined distance to target and cost of any changed ingredients.
 $$
 r^{*} = \operatorname*{arg\,min}_{r'} \Big[ \underbrace{\lambda_{\text{target}} \lVert \mathbf{x}' - \tilde{\mathbf{c}} \rVert^2}_{\text{distance to target}} + \underbrace{C(r' ; r)}_{\text{cost of change}} \Big]
 \quad \text{subject to} \quad \ell_i \le p'_i \le u_i
 $$ {#eq-optimization}
 
+This approach allows the target to be any point in feature space, the main implication being that a pizzialo could specify some blend of styles and adjust some recipe towards some point between their centroids. 
+
+We demonstrate this movement again in the first two principle component space to make concrete.
+
+__plot to show a new york, sicillian, and neapolitan recipe adjusted towards neapolitan centroid in first two pca space__
+
+As an example, applying this adjustment towards the Neapolitan centroid across the corpus gives us the below changes in formulation
+
+__table to show average ingredient change when all corpus are adjusted towards neapolitan centroid__
 
 ## Conclusion
 
@@ -512,6 +594,11 @@ $$ {#eq-optimization}
 - Are the centroids specific enough to be informative?
 - Can this information be used in dough formulation development?
 - 
+
+## Resources {.appendix}
+
+The code and dataset can be found at: <github link>
+The application can be found at: <streamlit link>
 
 ## Dataset Statistics {.appendix}
 
