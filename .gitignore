@@ -32,3 +32,6 @@ ideas.md
 /data/interim/*
 !/data/interim/.gitkeep
 
+
+# Quarto render intermediates
+*.quarto_ipynb*
