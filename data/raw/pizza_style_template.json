@@ -216,7 +216,7 @@
       "yeast_type": {
         "raw": "yeast",
         "method": "manual (unspecified type)",
-        "note": "no yeast type stated at all; assumed instant as the default"
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to instant)"
       },
       "fat": {
         "raw": "(not present)",
@@ -242,7 +242,7 @@
     "water": 62.0,
     "salt": 2.0,
     "yeast": 0.5,
-    "yeast_type": "instant",
+    "yeast_type": "unknown",
     "fat": 0.0,
     "fat_type": null,
     "sugar": 2.0,
@@ -325,8 +325,8 @@
       },
       "flour_type": {
         "raw": "Flour",
-        "method": "manual (unspecified)",
-        "note": "no flour type named at all; defaulted to double_zero, the style-conventional flour for neapolitan"
+        "method": "manual (unspecified type)",
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to all-purpose)"
       },
       "water": {
         "raw": "Water (59%)",
@@ -366,7 +366,7 @@
       }
     },
     "flour": 100.0,
-    "flour_type": "double_zero",
+    "flour_type": "unknown",
     "water": 59.0,
     "salt": 2.8,
     "yeast": 0.17,
@@ -515,8 +515,8 @@
       },
       "flour_type": {
         "raw": "Flour",
-        "method": "manual (unspecified)",
-        "note": "no flour type named (official AVPN standard implies 00, but not stated in this excerpt); defaulted to double_zero"
+        "method": "manual (unspecified type)",
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to all-purpose)"
       },
       "water": {
         "raw": "Water: 1 litre (1000 ml)",
@@ -557,7 +557,7 @@
       }
     },
     "flour": 100.0,
-    "flour_type": "double_zero",
+    "flour_type": "unknown",
     "water": 58.8235,
     "salt": 2.9412,
     "yeast": 0.0912,
@@ -642,8 +642,8 @@
       },
       "flour_type": {
         "raw": "flour",
-        "method": "manual (unspecified)",
-        "note": "no flour type named in either poolish or dough; defaulted to double_zero (style-conventional, and Gozney markets this as a Neapolitan formula)"
+        "method": "manual (unspecified type)",
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to all-purpose)"
       },
       "water": {
         "raw": "655g water (dough) + 125g water (poolish, scaled)",
@@ -683,7 +683,7 @@
       }
     },
     "flour": 100.0,
-    "flour_type": "double_zero",
+    "flour_type": "unknown",
     "water": 65.0365,
     "salt": 3.0257,
     "yeast": 0.3016,
@@ -870,69 +870,6 @@
     "flour_type": "high-gluten",
     "water": 71.023,
     "salt": 1.924,
-    "yeast": 0.6037,
-    "yeast_type": "instant",
-    "fat": 0.0,
-    "fat_type": null,
-    "sugar": 0.0,
-    "sugar_type": null
-  },
-  {
-    "recipe_id": "sicilian_004",
-    "style": "sicilian",
-    "source": "https://www.pizzamaking.com/forum/index.php?msg=218034 Part 3",
-    "raw_text": "Norma's 12\" x 17\" Rectangular Pan Version\nKyrol High-Gluten Flour (100%): 391.1 g\nWater (71.023%): 277.77 g\nIDY (0.60369%): 2.36 g\nMorton's Kosher Salt (2.2372%): 8.75 g\nTotal (173.86389%): 679.99 g | TF = 0.1175754\nNote: Nominal thickness factor = 0.11527; bowl residue compensation = 2%",
-    "mapping": {
-      "flour": {
-        "raw": "Kyrol High-Gluten Flour (100%): 391.1 g",
-        "method": "percentage given directly; baker's-percentage anchor"
-      },
-      "flour_type": {
-        "raw": "Kyrol High-Gluten Flour",
-        "method": "match_alias"
-      },
-      "water": {
-        "raw": "Water (71.023%)",
-        "method": "percentage given directly"
-      },
-      "salt": {
-        "raw": "Morton's Kosher Salt (2.2372%)",
-        "method": "percentage given directly",
-        "note": "note says a 2% bowl residue compensation applies, but the per-ingredient %% here is identical to Part 1's -> compensation scales total dough weight only, not the ingredient ratios, so no correction was needed"
-      },
-      "yeast": {
-        "raw": "IDY (0.60369%)",
-        "method": "percentage given directly"
-      },
-      "yeast_type": {
-        "raw": "IDY",
-        "method": "match_alias"
-      },
-      "fat": {
-        "raw": "(not present in source)",
-        "method": "manual",
-        "note": "no fat ingredient in source; defaulted to 0"
-      },
-      "fat_type": {
-        "raw": "(not present in source)",
-        "method": "manual",
-        "note": "no fat ingredient in source; defaulted to 0"
-      },
-      "sugar": {
-        "raw": "(not present in source)",
-        "method": "manual",
-        "note": "no sugar ingredient in source; defaulted to 0"
-      },
-      "sugar_type": {
-        "raw": "(not present in source)",
-        "method": "manual",
-        "note": "no sugar ingredient in source; defaulted to 0"
-      }
-    },
-    "flour": 100.0,
-    "flour_type": "high-gluten",
-    "water": 71.023,
-    "salt": 2.2372,
     "yeast": 0.6037,
     "yeast_type": "instant",
     "fat": 0.0,
@@ -1378,8 +1315,8 @@
       },
       "flour_type": {
         "raw": "Stone-Buhr Flour",
-        "method": "manual (unspecified protein level)",
-        "note": "Stone-Buhr is a flour brand, not a protein/type descriptor; no alias match, defaulted to all_purpose"
+        "method": "manual (unspecified type)",
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to all-purpose)"
       },
       "water": {
         "raw": "363 gr. Water (63%)",
@@ -1415,7 +1352,7 @@
       }
     },
     "flour": 100.0,
-    "flour_type": "all-purpose",
+    "flour_type": "unknown",
     "water": 62.9116,
     "salt": 2.9463,
     "yeast": 0.5199,
@@ -1557,8 +1494,8 @@
       },
       "flour_type": {
         "raw": "Flour",
-        "method": "manual (unspecified)",
-        "note": "no flour type named; defaulted to high_gluten, the style-conventional flour for new_york"
+        "method": "manual (unspecified type)",
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to all-purpose)"
       },
       "water": {
         "raw": "Water (59%): 156.02 g",
@@ -1583,7 +1520,7 @@
       "fat_type": {
         "raw": "Oil",
         "method": "manual (unspecified type)",
-        "note": "source says only 'Oil' with no type; defaulted to vegetable_oil (the conventional neutral oil in American-style pizza dough) rather than evoo, since these recipes never mention olive oil specifically."
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to vegetable oil)"
       },
       "sugar": {
         "raw": "Sugar (2%): 5.29 g",
@@ -1595,13 +1532,13 @@
       }
     },
     "flour": 100.0,
-    "flour_type": "high-gluten",
+    "flour_type": "unknown",
     "water": 58.9979,
     "salt": 1.7508,
     "yeast": 0.2798,
     "yeast_type": "instant",
     "fat": 2.0004,
-    "fat_type": "vegetable oil",
+    "fat_type": "unknown",
     "sugar": 2.0004,
     "sugar_type": "white"
   },
@@ -1765,7 +1702,7 @@
       "fat_type": {
         "raw": "Oil",
         "method": "manual (unspecified type)",
-        "note": "source says only 'Oil' with no type; defaulted to vegetable_oil (the conventional neutral oil in American-style pizza dough) rather than evoo, since these recipes never mention olive oil specifically."
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to vegetable oil)"
       },
       "sugar": {
         "raw": "1.32%, Sugar, 5.98 g",
@@ -1783,7 +1720,7 @@
     "yeast": 0.7804,
     "yeast_type": "instant",
     "fat": 4.6296,
-    "fat_type": "vegetable oil",
+    "fat_type": "unknown",
     "sugar": 1.3183,
     "sugar_type": "white"
   },
@@ -1954,7 +1891,7 @@
       "fat_type": {
         "raw": "oil (you decide which kind)",
         "method": "manual (unspecified type)",
-        "note": "source says only 'Oil' with no type; defaulted to vegetable_oil (the conventional neutral oil in American-style pizza dough) rather than evoo, since these recipes never mention olive oil specifically. Source explicitly says the oil type is unspecified/interchangeable, so vegetable_oil (neutral) fits better than evoo."
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to vegetable oil)"
       },
       "sugar": {
         "raw": "2 tsp honey",
@@ -1972,7 +1909,7 @@
     "yeast": 1.28,
     "yeast_type": "active-dry",
     "fat": 2.153,
-    "fat_type": "vegetable oil",
+    "fat_type": "unknown",
     "sugar": 2.2397,
     "sugar_type": "honey"
   },
@@ -2189,7 +2126,8 @@
       },
       "yeast_type": {
         "raw": "Dry yeast",
-        "method": "manual (unspecified dry yeast, defaulted to instant)"
+        "method": "manual (unspecified type)",
+        "note": "type not stated in the source; recorded as unknown and imputed in the model pipeline from training-data type shares (previously defaulted to instant)"
       },
       "fat": {
         "raw": "Olive oil 40g .7%",
@@ -2216,7 +2154,7 @@
     "water": 61.8605,
     "salt": 2.3256,
     "yeast": 0.186,
-    "yeast_type": "instant",
+    "yeast_type": "unknown",
     "fat": 3.7209,
     "fat_type": "extra-virgin olive oil",
     "sugar": 0.0,

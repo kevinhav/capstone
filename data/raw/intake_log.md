@@ -26,6 +26,28 @@ policy-level decisions that don't belong to one field.
   `water=71.11%, salt=2.86%, yeast=0.97% (fresh), fat=2.16% (evoo), sugar=2.34% (white)`,
   `flour_type=double_zero` (dominant between the "00" and high-gluten/bread flour blend).
 
+## Update — label leakage fixes
+
+- **Unstated types are now `unknown`, not defaulted.** Unspecified flour types used to be
+  filled with the style-conventional flour (`double_zero` for neapolitan, `high-gluten` for
+  new-york, `bread` for sicilian), which put the style label into a feature. Other unstated
+  types had fixed defaults (`instant` yeast, `vegetable_oil` for American-style "oil"). Every
+  type the source never stated is now `unknown` (10 fields across 9 recipes):
+  - flour: `neapolitan_006`, `neapolitan_009`, `neapolitan_011`, `new_york_006`,
+    `new_york_003` (brand only, "Stone-Buhr")
+  - yeast: `neapolitan_004` ("yeast"), `new_york_016` ("Dry yeast", instant or active-dry)
+  - fat: `new_york_006`, `new_york_009`, `new_york_012` ("oil")
+
+  The pipeline (`capstone.features.ImputingOneHotEncoder`) encodes `unknown` as the share of
+  each type among training recipes that use the ingredient, fit inside each CV fold, so it is
+  never a level of its own. Types inferred from evidence in the source (dominant flour of a
+  blend, "KABP", the proofing method, narrative text) are kept.
+- **`sicilian_004` removed as a duplicate.** Its formula was identical to `sicilian_002`
+  (both msg=218034), so the same recipe could sit in both a training and a test fold.
+  `new_york_003` / `new_york_004` share a source post but are distinct formulas, so both stay.
+
+**Result:** 40 recipes (12 neapolitan, 17 new-york, 11 sicilian).
+
 ## Style labels
 
 Per instruction, every recipe's `style` matches the `.md` file it came from, regardless of
@@ -36,9 +58,10 @@ Sicilian ones. Kept as `sicilian` since that's the file they're in.
 
 ## Standing conventions applied (not asked per-instance)
 
-- **Unspecified flour type** → defaulted to the style-conventional flour: `double_zero` for
-  neapolitan, `high-gluten` for new-york, `bread` for sicilian.
-- **Unspecified yeast type** (bare "yeast," no qualifier) → defaulted to `instant`.
+- **Unspecified ingredient type** (flour, yeast, or fat named without a type, e.g. "flour",
+  "yeast", "dry yeast", "oil", or a brand with no type) → recorded as `unknown`. No value is
+  guessed in the data; the model pipeline imputes it from training-data type shares (see
+  "Update — label leakage fixes" above).
 - **Multiple ingredient/leavening options in one recipe** (e.g. "fresh yeast or active dry
   yeast," three alternate leavening methods in the AVPN formula) → took the first-listed
   option; alternates noted in that field's `mapping.note`.

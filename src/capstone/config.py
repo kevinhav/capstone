@@ -80,6 +80,7 @@ PATHS = ProjectPaths()
 # -- domain enums -----------------------------------------------------------
 
 ABSENT: Final = "none"  # type value for an optional ingredient the recipe doesn't use
+UNKNOWN: Final = "unknown"  # type value the source never stated; imputed in the pipeline, not in the data
 
 
 class Style(StrEnum):
@@ -94,6 +95,7 @@ class FlourType(StrEnum):
     high_gluten = "high-gluten"
     double_zero = "double_zero"
     semolina = "semolina"
+    unknown = UNKNOWN
 
 
 class YeastType(StrEnum):
@@ -101,6 +103,7 @@ class YeastType(StrEnum):
     instant = "instant"
     fresh = "fresh"
     sourdough_starter = "sourdough-starter"  # includes poolish
+    unknown = UNKNOWN
 
 
 class FatType(StrEnum):
@@ -108,6 +111,7 @@ class FatType(StrEnum):
     butter = "butter"
     lard = "lard"
     vegetable_oil = "vegetable oil"
+    unknown = UNKNOWN
     none = ABSENT
 
 
@@ -115,6 +119,7 @@ class SugarType(StrEnum):
     white = "white"
     brown = "brown"
     honey = "honey"
+    unknown = UNKNOWN
     none = ABSENT
 
 
@@ -206,6 +211,7 @@ LABELS: Final[Mapping[str, str]] = {
     "brown": "Brown sugar",
     "honey": "Honey",
     "none": "None",
+    "unknown": "Unknown",
     Col.flour: "Flour",
     Col.water: "Water",
     Col.salt: "Salt",

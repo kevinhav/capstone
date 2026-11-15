@@ -45,7 +45,7 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 | Flour | 100.00 | double_zero |
 | Water | 62.00 | - |
 | Salt | 2.00 | - |
-| Yeast | 0.50 | instant |
+| Yeast | 0.50 | unknown |
 | Sugar | 2.00 | honey |
 
 **Source:** [https://modernistcuisine.com/wp-content/uploads/2013/04/Neopolitan-Pizza-Dough-3-1024x446.jpg](https://modernistcuisine.com/wp-content/uploads/2013/04/Neopolitan-Pizza-Dough-3-1024x446.jpg)
@@ -65,7 +65,7 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 
 | Ingredient | % | Type |
 |---|---|---|
-| Flour | 100.00 | double_zero |
+| Flour | 100.00 | unknown |
 | Water | 59.00 | - |
 | Salt | 2.80 | - |
 | Yeast | 0.17 | fresh |
@@ -98,7 +98,7 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 
 | Ingredient | % | Type |
 |---|---|---|
-| Flour | 100.00 | double_zero |
+| Flour | 100.00 | unknown |
 | Water | 58.82 | - |
 | Salt | 2.94 | - |
 | Yeast | 0.09 | fresh |
@@ -120,7 +120,7 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 
 | Ingredient | % | Type |
 |---|---|---|
-| Flour | 100.00 | double_zero |
+| Flour | 100.00 | unknown |
 | Water | 65.04 | - |
 | Salt | 3.03 | - |
 | Yeast | 0.30 | instant |
@@ -157,7 +157,7 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 
 | Ingredient | % | Type |
 |---|---|---|
-| Flour | 100.00 | all-purpose |
+| Flour | 100.00 | unknown |
 | Water | 62.91 | - |
 | Salt | 2.95 | - |
 | Yeast | 0.52 | instant |
@@ -195,11 +195,11 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 
 | Ingredient | % | Type |
 |---|---|---|
-| Flour | 100.00 | high-gluten |
+| Flour | 100.00 | unknown |
 | Water | 59.00 | - |
 | Salt | 1.75 | - |
 | Yeast | 0.28 | instant |
-| Fat | 2.00 | vegetable oil |
+| Fat | 2.00 | unknown |
 | Sugar | 2.00 | white |
 
 **Source:** [https://www.pizzamaking.com/forum/index.php?msg=484857](https://www.pizzamaking.com/forum/index.php?msg=484857)
@@ -237,7 +237,7 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 | Water | 64.09 | - |
 | Salt | 1.32 | - |
 | Yeast | 0.78 | instant |
-| Fat | 4.63 | vegetable oil |
+| Fat | 4.63 | unknown |
 | Sugar | 1.32 | white |
 
 **Source:** [https://www.pizzamaking.com/forum/index.php?msg=19140](https://www.pizzamaking.com/forum/index.php?msg=19140)
@@ -272,7 +272,7 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 | Water | 66.24 | - |
 | Salt | 1.92 | - |
 | Yeast | 1.28 | active-dry |
-| Fat | 2.15 | vegetable oil |
+| Fat | 2.15 | unknown |
 | Sugar | 2.24 | honey |
 
 **Source:** [https://www.pizzamaking.com/forum/index.php?msg=31163](https://www.pizzamaking.com/forum/index.php?msg=31163)
@@ -325,17 +325,6 @@ Baker's percentages (flour = 100%). Generated from `pizza_style_template.json`.
 | Yeast | 0.60 | instant |
 
 **Source:** [https://www.pizzamaking.com/forum/index.php?msg=218034 Part 2](https://www.pizzamaking.com/forum/index.php?msg=218034 Part 2)
-
-### sicilian_004
-
-| Ingredient | % | Type |
-|---|---|---|
-| Flour | 100.00 | high-gluten |
-| Water | 71.02 | - |
-| Salt | 2.24 | - |
-| Yeast | 0.60 | instant |
-
-**Source:** [https://www.pizzamaking.com/forum/index.php?msg=218034 Part 3](https://www.pizzamaking.com/forum/index.php?msg=218034 Part 3)
 
 ### sicilian_005
 

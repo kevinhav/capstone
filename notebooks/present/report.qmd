@@ -519,7 +519,7 @@ We evaluate the classifications of the models and compare to both our affinity s
 
 ```{python}
 #| label: tbl-cv-results
-#| tbl-cap: "Held-out accuracy and macro F1 per model, mean ± standard deviation over folds"
+#| tbl-cap: "Held-out accuracy and macro F1 per model: mean ± standard deviation over single folds, and standard deviation over repeat means"
 # TABLE: cross-validated results per model (make_models / cross_validate, as in figures.qmd):
 # mean and standard deviation of held-out accuracy (and macro F1), with the majority-class
 # baseline row. Replaces the "<Table of model results>" placeholder.
@@ -528,11 +528,16 @@ cv_result = cross_validate(make_models(include=[MAJORITY, *COMPARED]), recipes[F
 cv_summary = summarize(cv_result.folds, ("accuracy", "macro_f1"))
 Markdown(
     pd.DataFrame({
-        name: cv_summary[metric]["mean"].map("{:.2f}".format) + " ± " + cv_summary[metric]["std"].map("{:.2f}".format)
+        column: values
         for metric, name in {"accuracy": "Accuracy", "macro_f1": "Macro F1"}.items()
+        for column, values in {
+            f"{name} (± fold SD)": cv_summary[metric]["mean"].map("{:.2f}".format)
+            + " ± " + cv_summary[metric]["std"].map("{:.2f}".format),
+            f"{name} repeat SD": cv_summary[metric]["repeat_std"].map("{:.2f}".format),
+        }.items()
     })
     .rename_axis(f"Model ({cv_config.n_splits}-fold, {cv_config.n_repeats} repeats)")
-    .to_markdown()
+    .to_markdown(disable_numparse=True)
 )
 ```
 

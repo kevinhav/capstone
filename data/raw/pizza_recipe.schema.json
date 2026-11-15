@@ -56,14 +56,14 @@
       }
     },
     "flour": { "type": "number", "const": 100.0, "description": "Baker's percentage basis - always 100." },
-    "flour_type": { "type": "string", "enum": ["all-purpose", "bread", "high-gluten", "double_zero", "semolina"] },
+    "flour_type": { "type": "string", "enum": ["all-purpose", "bread", "high-gluten", "double_zero", "semolina", "unknown"] },
     "water": { "type": "number" },
     "salt": { "type": "number" },
     "yeast": { "type": "number" },
-    "yeast_type": { "type": "string", "enum": ["active-dry", "instant", "fresh", "sourdough-starter"] },
+    "yeast_type": { "type": "string", "enum": ["active-dry", "instant", "fresh", "sourdough-starter", "unknown"] },
     "fat": { "type": "number" },
-    "fat_type": { "type": ["string", "null"], "enum": ["extra-virgin olive oil", "butter", "lard", "vegetable oil", null] },
+    "fat_type": { "type": ["string", "null"], "enum": ["extra-virgin olive oil", "butter", "lard", "vegetable oil", "unknown", null] },
     "sugar": { "type": "number" },
-    "sugar_type": { "type": ["string", "null"], "enum": ["white", "brown", "honey", null] }
+    "sugar_type": { "type": ["string", "null"], "enum": ["white", "brown", "honey", "unknown", null] }
   }
 }

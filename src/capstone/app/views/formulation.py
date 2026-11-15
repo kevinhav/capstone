@@ -15,6 +15,7 @@ from capstone.config import (
     PLOT,
     STYLE_SIZES,
     STYLES,
+    UNKNOWN,
     Col,
     FatType,
     FlourType,
@@ -150,7 +151,9 @@ def _target_inputs() -> dict[str, float]:
 
 def _change(col: Col, before: object, after: object) -> str:
     if col in CATEGORICAL:
-        return "" if before == after else "swapped"
+        if before == after:
+            return ""
+        return "specified" if before == UNKNOWN else "swapped"
     if before == 0 and after > 0:
         return "added"
     if before > 0 and after == 0:

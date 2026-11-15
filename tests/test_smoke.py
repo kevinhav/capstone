@@ -123,3 +123,31 @@ def test_type_changes_are_real(recipes, space):
         adjusted, info = adjust_many(recipes, style, space)
         changed = (adjusted[CATEGORICAL].astype(str) != recipes[CATEGORICAL].astype(str)).sum(axis=1)
         assert (info["n_type_changes"] <= changed).all()
+
+
+def test_unknown_type_is_imputed_from_training_shares():
+    from capstone.config import ABSENT, UNKNOWN
+    from capstone.features import ImputingOneHotEncoder
+
+    train = pd.DataFrame({"t": ["a", "a", "b", ABSENT, UNKNOWN]})
+    enc = ImputingOneHotEncoder().fit(train)
+    assert list(enc.get_feature_names_out()) == ["t_a", "t_b", f"t_{ABSENT}"]  # unknown is never a level
+    out = enc.transform(pd.DataFrame({"t": ["b", UNKNOWN, "unseen"]}))
+    assert out[0].tolist() == [0.0, 1.0, 0.0]
+    assert out[1].tolist() == pytest.approx([2 / 3, 1 / 3, 0.0])  # shares among present types
+    assert out[2].tolist() == [0.0, 0.0, 0.0]
+
+
+def test_naming_an_unknown_type_is_not_a_swap(recipes, space):
+    from capstone.app.views.formulation import _change
+    from capstone.config import ABSENT, UNKNOWN
+
+    unknown = recipes[(recipes[CATEGORICAL] == UNKNOWN).any(axis=1)]
+    assert len(unknown) > 0
+    adjusted, info = adjust_many(unknown, STYLES[0], space)
+    assert not (adjusted[CATEGORICAL] == UNKNOWN).any().any()
+    before, after = unknown[CATEGORICAL].astype(str), adjusted[CATEGORICAL].astype(str)
+    # a swap: a stated type changed to another type (to or from ABSENT is an add/remove instead)
+    known = (before != UNKNOWN) & (before != after) & (before != ABSENT) & (after != ABSENT)
+    assert (info["n_type_changes"] == known.sum(axis=1)).all()
+    assert _change(Col.flour_type, UNKNOWN, "bread") == "specified"

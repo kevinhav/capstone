@@ -198,7 +198,7 @@ FLOUR_TYPE_ALIASES: dict[str, FlourType] = {
     "all trumps": FlourType.high_gluten,
     "semolina": FlourType.semolina,
     "semola": FlourType.semolina,
-    "other": FlourType.all_purpose,  # fallback for unknown flours
+    "other": FlourType.unknown,  # unrecognized flour: imputed in the pipeline
 }
 
 YEAST_TYPE_ALIASES: dict[str, YeastType] = {
@@ -217,7 +217,7 @@ YEAST_TYPE_ALIASES: dict[str, YeastType] = {
     "culture": YeastType.sourdough_starter,
     "mother yeast": YeastType.sourdough_starter,
     "preferment": YeastType.sourdough_starter,
-    "other": YeastType.instant,  # fallback for unknown yeasts
+    "other": YeastType.unknown,  # unrecognized yeast: imputed in the pipeline
 }
 
 FAT_TYPE_ALIASES: dict[str, FatType] = {
@@ -230,7 +230,7 @@ FAT_TYPE_ALIASES: dict[str, FatType] = {
     "strutto": FatType.lard,
     "vegetable oil": FatType.vegetable_oil,
     "soybean oil": FatType.vegetable_oil,
-    "other": FatType.evoo,  # fallback for unknown fats
+    "other": FatType.unknown,  # unrecognized fat: imputed in the pipeline
 }
 
 SUGAR_TYPE_ALIASES: dict[str, SugarType] = {

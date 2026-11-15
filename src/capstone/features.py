@@ -5,15 +5,53 @@ from typing import Final
 
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 
-from capstone.config import CATEGORICAL, NUMERIC, OPTIONAL, Col, label
+from capstone.config import ABSENT, CATEGORICAL, NUMERIC, OPTIONAL, UNKNOWN, Col, label
 
 NUM_BLOCK: Final = "num"
 CAT_BLOCK: Final = "cat"
 PREP_STEP: Final = "prep"
+
+
+class ImputingOneHotEncoder(TransformerMixin, BaseEstimator):
+    """One-hot encoder that imputes UNKNOWN types from the training data.
+
+    Known types encode as a usual one-hot row. An UNKNOWN type encodes as the share of
+    each type among training recipes that use the ingredient (ABSENT excluded, since an
+    unknown type still means the ingredient is present): the categorical analogue of mean
+    imputation. UNKNOWN never becomes a level of its own, so it carries no style signal
+    and is never a type the adjuster can choose. Types unseen in training encode as zeros.
+    """
+
+    def fit(self, X: pd.DataFrame, y: object = None) -> "ImputingOneHotEncoder":
+        X = pd.DataFrame(X)
+        self.feature_names_in_ = np.asarray(X.columns, dtype=object)
+        self.n_features_in_ = X.shape[1]
+        self.categories_ = [np.array(sorted(set(X[c]) - {UNKNOWN}), dtype=object) for c in X]
+        self.shares_ = [
+            X[c][~X[c].isin([UNKNOWN, ABSENT])].value_counts(normalize=True).reindex(levels, fill_value=0.0).to_numpy()
+            for c, levels in zip(X, self.categories_)
+        ]
+        return self
+
+    def transform(self, X: pd.DataFrame) -> np.ndarray:
+        X = pd.DataFrame(X, columns=self.feature_names_in_)
+        blocks = []
+        for c, levels, shares in zip(X, self.categories_, self.shares_):
+            values = X[c].to_numpy(dtype=object)
+            block = (values[:, None] == levels[None, :]).astype(float)
+            block[values == UNKNOWN] = shares
+            blocks.append(block)
+        return np.hstack(blocks)
+
+    def get_feature_names_out(self, input_features: Sequence[str] | None = None) -> np.ndarray:
+        return np.array(
+            [f"{c}_{k}" for c, levels in zip(self.feature_names_in_, self.categories_) for k in levels], dtype=object
+        )
 
 
 # We intentionally z-score because small changes in small ingredients have large impacts
@@ -21,7 +59,8 @@ PREP_STEP: Final = "prep"
 def build_preprocessor(
     numeric: Sequence[Col] = NUMERIC, categorical: Sequence[Col] = CATEGORICAL
 ) -> ColumnTransformer:
-    """Z-score the numeric ratios and one-hot encode the ingredient types.
+    """Z-score the numeric ratios and one-hot encode the ingredient types, imputing
+    unstated (UNKNOWN) types from the training data (see `ImputingOneHotEncoder`).
 
     Either group may be empty, which makes the transformer reusable for ablations.
     """
@@ -29,13 +68,7 @@ def build_preprocessor(
     if numeric:
         blocks.append((NUM_BLOCK, StandardScaler(), [str(c) for c in numeric]))
     if categorical:
-        blocks.append(
-            (
-                CAT_BLOCK,
-                OneHotEncoder(handle_unknown="ignore", sparse_output=False),
-                [str(c) for c in categorical],
-            )
-        )
+        blocks.append((CAT_BLOCK, ImputingOneHotEncoder(), [str(c) for c in categorical]))
     return ColumnTransformer(blocks)
 
 

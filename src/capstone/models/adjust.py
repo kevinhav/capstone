@@ -5,7 +5,7 @@ minimizes
 
     L(x') = w_target * ||phi(x') - c||^2          (pull toward the target)
           + w_ratio  * sum_j (z'_j - z_j)^2        (changed ratios, lenient)
-          + w_type   * #(ingredient types swapped) (moderate)
+          + w_type   * #(ingredient types swapped) (moderate; an unknown type is free to name)
           + w_remove * #(optional ingredients dropped)
           + w_add    * #(optional ingredients added) (very strict)
 
@@ -32,6 +32,7 @@ from capstone.config import (
     NUMERIC,
     OPTIONAL,
     STYLES,
+    UNKNOWN,
     Col,
     LossWeights,
     Target,
@@ -42,7 +43,12 @@ from capstone.features import (
     numeric_bounds,
     scaler_stats,
 )
-from capstone.models.centroids import blend_centroid, resolve_target, styles, target_distance
+from capstone.models.centroids import (
+    blend_centroid,
+    resolve_target,
+    styles,
+    target_distance,
+)
 
 
 # Data is small enough that we can go through every combination
@@ -170,10 +176,10 @@ def _adjust_one(
             z[here, j], counted[here, j] = added[j], False
             n_add += here
 
-    # Number of categorical changes
+    # Number of categorical changes; naming a type the source left unstated is not a swap
     n_type = np.zeros(n_combos)
     for j, col in enumerate(CATEGORICAL):
-        changed = space.combos[:, j] != orig_types[j]
+        changed = (space.combos[:, j] != orig_types[j]) & (orig_types[j] != UNKNOWN)
         ratio = next((r for r, t in OPTIONAL.items() if t == col), None)
         if ratio is not None:
             changed &= (

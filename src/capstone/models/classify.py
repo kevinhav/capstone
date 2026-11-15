@@ -156,15 +156,23 @@ def model_order(folds: pd.DataFrame, metric: str = "accuracy") -> list[str]:
     return list(means.sort_values(ascending=metric == "log_loss").index)
 
 
-def summarize(folds: pd.DataFrame, metrics: Sequence[str] = METRICS) -> pd.DataFrame:
-    """Mean and standard deviation of each metric across all folds, best accuracy first."""
-    return folds.groupby("model")[list(metrics)].agg(["mean", "std"]).loc[model_order(folds)]
-
-
 def repeat_means(folds: pd.DataFrame, metrics: Sequence[str] = ("accuracy", "macro_f1")) -> pd.DataFrame:
     """Each repeat's mean over its folds: the unit that varies independently of how one
     small test fold happened to be drawn, so its spread is the honest uncertainty."""
     return folds.groupby(["model", "repeat"])[list(metrics)].mean().reset_index()
+
+
+def summarize(folds: pd.DataFrame, metrics: Sequence[str] = METRICS) -> pd.DataFrame:
+    """Per model and metric: the mean, the standard deviation across single folds ("std"),
+    and the standard deviation across repeat means ("repeat_std"), best accuracy first.
+
+    With small test folds one recipe moves a fold's score by a large step, so "std" mostly
+    reflects fold size; "repeat_std" is the spread of the model's estimated performance.
+    """
+    fold_stats = folds.groupby("model")[list(metrics)].agg(["mean", "std"])
+    repeat_std = repeat_means(folds, metrics).groupby("model")[list(metrics)].std()
+    repeat_std.columns = pd.MultiIndex.from_product([repeat_std.columns, ["repeat_std"]])
+    return pd.concat([fold_stats, repeat_std], axis=1)[list(metrics)].loc[model_order(folds)]
 
 
 def compare_to_baseline(folds: pd.DataFrame, baseline: str = BASELINE) -> pd.DataFrame:
