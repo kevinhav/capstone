@@ -683,7 +683,7 @@ The application can be found at: <streamlit link>
 | Symbol | Meaning |
 |:--|:----------|
 | $r$ | A dough formula (recipe), represented as in @eq-recipe |
-| $\mathcal{D}$ | The reference corpus of curated formulas, $\lvert\mathcal{D}\rvert = 32$ |
+| $\mathcal{D}$ | The reference corpus of curated formulas, $\lvert\mathcal{D}\rvert = 41$ |
 | $\mathcal{I}$ | Ingredients measured by mass: flour, water, salt, yeast, fat, sugar |
 | $\mathcal{K}$ | Ingredients that also have a type: flour, yeast, fat, sugar ($\mathcal{K} \subset \mathcal{I}$) |
 | $i$ | Index over ingredients |

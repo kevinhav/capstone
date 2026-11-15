@@ -79,3 +79,47 @@ Sicilian ones. Kept as `sicilian` since that's the file they're in.
 - **new_york_002** (msg=49940) — author explicitly states the flour amount is "approximate...
   varies with humidity, season, temp," not a fixed measurement. Not a schema gap, so nothing
   to add here — genuinely not reducible to a point estimate.
+
+## Second population pass (2026-11-14)
+
+Source: `data/raw/raw_intake.md` RAW-001 through RAW-010. Converted with the `capstone.data`
+helpers under the standing conventions above; per-field provenance is on each record's
+`mapping`. **Result:** 9 recipes added (32 -> 41: 17 new-york, 12 neapolitan, 12 sicilian),
+1 skipped. All 9 validated against `pizza_recipe.schema.json`.
+
+| RAW id | recipe_id | Source |
+|---|---|---|
+| RAW-001 | new_york_013 | Peter Reinhart, Pizza Quest NY-style dough |
+| RAW-002 | new_york_014 | King Arthur NY-style pizza class workbook |
+| RAW-003 | new_york_015 | Ooni New York-Style Pizza |
+| RAW-004 | new_york_016 | Gozney New York Style Pizza Dough (Luis Perez) |
+| RAW-005 | new_york_017 | Caputo, Mimmo's New York Style Pizza |
+| RAW-006 | sicilian_011 | Caputo Sheet Pan Pizza Dough |
+| RAW-007 | sicilian_012 | Ooni Sicilian Pizza |
+| RAW-008 | sicilian_013 | Ooni NEPA Pan-Fried Sicilian (Jim Mirabelli) |
+| RAW-009 | neapolitan_012 | America's Test Kitchen Neapolitan-Style Pizza |
+
+Decisions specific to this pass:
+
+- **Style labels for sicilian_011 and sicilian_013 confirmed.** The Caputo page is titled
+  "Sheet Pan Pizza Dough" but its headnote and method call it Sicilian-style; the NEPA recipe
+  is a Northeastern Pennsylvania regional variant that labels itself Sicilian-style.
+- **King Arthur NY web recipe not added separately.** Same formula as the RAW-002 workbook.
+- **new_york_013 (Reinhart):** used the source's parenthetical ounce weights throughout,
+  including water (14 oz) and oil (1.5 oz), rather than converting the volume measures.
+- **new_york_016 (Gozney):** the 150g poolish is split 50/50 via `split_starter`, which
+  reproduces the source's own stated totals (1075g flour, 665g water) exactly. The source
+  prints oil as ".7%"; used the 40g gram weight (3.72%), which matches its imperial listing.
+- **new_york_017 (Caputo NY):** ingredient list says "Active Yeast", method says "Instant
+  Yeast"; recorded active-dry per the ingredient list.
+- **neapolitan_012 (ATK):** the cooked flour paste (16g flour, 79g water) is folded into the
+  totals, giving ~76% hydration. High for the style but as published.
+- **sicilian_013 (NEPA):** the 30g peanut oil greases the pan for frying and is excluded.
+- **Fine sea salt measured by volume** (sicilian_012) uses the table-salt density.
+
+## Skipped in this pass (1)
+
+- **RAW-010** (Ooni Neo-Neapolitan, Cody Splane) — leavened with a 131g sourdough starter on
+  654g flour, a ~20% starter dosage that isn't comparable to the commercial-yeast percentages
+  in the yeast feature; also labeled "neo-Neapolitan" (bread + whole wheat flour, olive oil),
+  a borderline fit for the style.

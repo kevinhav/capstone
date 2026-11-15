@@ -280,7 +280,7 @@ class LossWeights:
 
 @dataclass(frozen=True)
 class CVConfig:
-    """Repeated stratified k-fold settings. Sicilian has n = 9, so keep n_splits <= 5."""
+    """Repeated stratified k-fold settings. Sicilian has n = 12, the smallest class with Neapolitan, so keep n_splits <= 5."""
 
     n_splits: int = 5
     n_repeats: int = 20

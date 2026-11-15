@@ -1975,5 +1975,563 @@
     "fat_type": "vegetable oil",
     "sugar": 2.2397,
     "sugar_type": "honey"
+  },
+  {
+    "recipe_id": "new_york_013",
+    "style": "new-york",
+    "source": "https://www.fornobravo.com/pizzaquest/ny-style-pizza-dough/",
+    "raw_text": "5 cups (22.5 ounces) unbleached high gluten flour or unbleached bread flour\n1  1/2 tablespoons (1 oz.) honey or 2 tablespoons (1 oz.) sugar\n2 teaspoons (0.5 oz.) salt (any kind)\n1 1/2 teaspoons (0.18 oz.) instant yeast or 2 teaspoons active dry yeast\n3 tablespoons (1.5 oz.) olive or vegetable oil\n1 3/4 cups (14 oz.) water, lukewarm",
+    "mapping": {
+      "flour": {
+        "raw": "5 cups (22.5 ounces) unbleached high gluten flour or unbleached bread flour",
+        "method": "to_grams(oz->g)",
+        "note": "used the parenthetical weight, not the cup measure; baker's-percentage anchor"
+      },
+      "flour_type": {
+        "raw": "unbleached high gluten flour or unbleached bread flour",
+        "method": "match_alias (first-listed option)",
+        "note": "high-gluten or bread offered as alternatives; took first-listed"
+      },
+      "water": {
+        "raw": "1 3/4 cups (14 oz.) water, lukewarm",
+        "method": "to_grams(oz->g) + to_baker_percentage",
+        "note": "parenthetical oz treated as weight, consistent with the other parenthetical weights in the formula"
+      },
+      "salt": {
+        "raw": "2 teaspoons (0.5 oz.) salt (any kind)",
+        "method": "to_grams(oz->g) + to_baker_percentage",
+        "note": "used the parenthetical weight, so salt brand/grind doesn't matter"
+      },
+      "yeast": {
+        "raw": "1 1/2 teaspoons (0.18 oz.) instant yeast or 2 teaspoons active dry yeast",
+        "method": "to_grams(oz->g) + to_baker_percentage (first-listed option)"
+      },
+      "yeast_type": {
+        "raw": "instant yeast or 2 teaspoons active dry yeast",
+        "method": "match_alias (first-listed option)"
+      },
+      "fat": {
+        "raw": "3 tablespoons (1.5 oz.) olive or vegetable oil",
+        "method": "to_grams(oz->g) + to_baker_percentage (first-listed option)",
+        "note": "parenthetical oz treated as weight (3 tbsp oil by density would be ~40g vs 42.5g)"
+      },
+      "fat_type": {
+        "raw": "olive or vegetable oil",
+        "method": "match_alias (first-listed option)"
+      },
+      "sugar": {
+        "raw": "1 1/2 tablespoons (1 oz.) honey or 2 tablespoons (1 oz.) sugar",
+        "method": "to_grams(oz->g) + to_baker_percentage (first-listed option)"
+      },
+      "sugar_type": {
+        "raw": "honey or ... sugar",
+        "method": "match_alias (first-listed option)"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "high-gluten",
+    "water": 62.2222,
+    "salt": 2.2222,
+    "yeast": 0.8,
+    "yeast_type": "instant",
+    "fat": 6.6667,
+    "fat_type": "extra-virgin olive oil",
+    "sugar": 4.4444,
+    "sugar_type": "honey"
+  },
+  {
+    "recipe_id": "new_york_014",
+    "style": "new-york",
+    "source": "https://shop.kingarthurbaking.com/content/class-pdfs/New-York-Style-Pizza-Workbook-King-Arthur-Baking.pdf",
+    "raw_text": "360g (3 cups) King Arthur Unbleached Bread Flour\n12g (scant 1 tablespoon) granulated sugar\n12g (2 teaspoons) table salt\n1/4 teaspoon instant yeast\n12g (scant 1 tablespoon) vegetable oil\n206g (3/4 cup plus 2 1/2 tablespoons) water, cool (60°F to 70°F)",
+    "mapping": {
+      "flour": {
+        "raw": "360g (3 cups) King Arthur Unbleached Bread Flour",
+        "method": "given gram weight",
+        "note": "baker's-percentage anchor"
+      },
+      "flour_type": {
+        "raw": "Unbleached Bread Flour",
+        "method": "match_alias"
+      },
+      "water": {
+        "raw": "206g (3/4 cup plus 2 1/2 tablespoons) water, cool (60°F to 70°F)",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "salt": {
+        "raw": "12g (2 teaspoons) table salt",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast": {
+        "raw": "1/4 teaspoon instant yeast",
+        "method": "YEAST_DENSITY_G_PER_TSP[instant] + to_baker_percentage",
+        "note": "no gram weight given"
+      },
+      "yeast_type": {
+        "raw": "instant yeast",
+        "method": "match_alias"
+      },
+      "fat": {
+        "raw": "12g (scant 1 tablespoon) vegetable oil",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "fat_type": {
+        "raw": "vegetable oil",
+        "method": "match_alias"
+      },
+      "sugar": {
+        "raw": "12g (scant 1 tablespoon) granulated sugar",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "sugar_type": {
+        "raw": "granulated sugar",
+        "method": "match_alias"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "bread",
+    "water": 57.2222,
+    "salt": 3.3333,
+    "yeast": 0.2153,
+    "yeast_type": "instant",
+    "fat": 3.3333,
+    "fat_type": "vegetable oil",
+    "sugar": 3.3333,
+    "sugar_type": "white"
+  },
+  {
+    "recipe_id": "new_york_015",
+    "style": "new-york",
+    "source": "https://ooni.com/blogs/recipes/new-york-style-pizza-dough",
+    "raw_text": "2 ½ cups (567 grams) water\n½ teaspoon (2 grams) active dry yeast, or ⅓ teaspoon instant dry yeast (1 ¼ grams)\n7 ¼ cups (872 grams) bread flour\n¾ tablespoon (9 grams) granulated sugar\n1 ¾ tablespoons (26 grams) kosher salt\n4 tablespoons (44 grams) extra-virgin olive oil\nFlour, for dusting",
+    "mapping": {
+      "flour": {
+        "raw": "7 ¼ cups (872 grams) bread flour",
+        "method": "given gram weight",
+        "note": "baker's-percentage anchor"
+      },
+      "flour_type": {
+        "raw": "bread flour",
+        "method": "match_alias"
+      },
+      "water": {
+        "raw": "2 ½ cups (567 grams) water",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "salt": {
+        "raw": "1 ¾ tablespoons (26 grams) kosher salt",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast": {
+        "raw": "½ teaspoon (2 grams) active dry yeast, or ⅓ teaspoon instant dry yeast (1 ¼ grams)",
+        "method": "given gram weight + to_baker_percentage (first-listed option)",
+        "note": "active dry or instant offered as alternatives; took first-listed (active dry)"
+      },
+      "yeast_type": {
+        "raw": "active dry yeast",
+        "method": "match_alias (first-listed option)"
+      },
+      "fat": {
+        "raw": "4 tablespoons (44 grams) extra-virgin olive oil",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "fat_type": {
+        "raw": "extra-virgin olive oil",
+        "method": "match_alias"
+      },
+      "sugar": {
+        "raw": "¾ tablespoon (9 grams) granulated sugar",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "sugar_type": {
+        "raw": "granulated sugar",
+        "method": "match_alias"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "bread",
+    "water": 65.0229,
+    "salt": 2.9817,
+    "yeast": 0.2294,
+    "yeast_type": "active-dry",
+    "fat": 5.0459,
+    "fat_type": "extra-virgin olive oil",
+    "sugar": 1.0321,
+    "sugar_type": "white"
+  },
+  {
+    "recipe_id": "new_york_016",
+    "style": "new-york",
+    "source": "https://us.gozney.com/blogs/recipes/new-york-style-pizza-recipe",
+    "raw_text": "Main Dough\nBread flour 1000g 93%\nCold water 590g 59%\nPoolish 150g 15%\nDry yeast 2g 0.18%\nSalt 25g 2.3%\nOlive oil 40g .7%\nTotals (including poolish)\nFlour 1075g 100%\nWater 665g 61.8%",
+    "mapping": {
+      "flour": {
+        "raw": "Bread flour 1000g 93% / Poolish 150g 15% / Totals: Flour 1075g 100%",
+        "method": "split_starter(150, hydration_pct=100) poolish fold-in, summed",
+        "note": "poolish composition not given; assumed 100% hydration, which reproduces the source's stated totals (1075g flour, 665g water) exactly. Baker's-percentage anchor."
+      },
+      "flour_type": {
+        "raw": "Bread flour",
+        "method": "match_alias"
+      },
+      "water": {
+        "raw": "Cold water 590g 59% / Totals: Water 665g 61.8%",
+        "method": "split_starter poolish fold-in + to_baker_percentage"
+      },
+      "salt": {
+        "raw": "Salt 25g 2.3%",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast": {
+        "raw": "Dry yeast 2g 0.18%",
+        "method": "given gram weight + to_baker_percentage",
+        "note": "poolish's own yeast not stated; only the discrete 2g dose is counted (same treatment as new_york_011)"
+      },
+      "yeast_type": {
+        "raw": "Dry yeast",
+        "method": "manual (unspecified dry yeast, defaulted to instant)"
+      },
+      "fat": {
+        "raw": "Olive oil 40g .7%",
+        "method": "given gram weight + to_baker_percentage",
+        "note": "source prints .7%, but 40g on 1075g total flour is 3.72% (the source's imperial listing gives 3.7%); used the gram weight"
+      },
+      "fat_type": {
+        "raw": "Olive oil",
+        "method": "match_alias"
+      },
+      "sugar": {
+        "raw": "(not present in source)",
+        "method": "manual",
+        "note": "no sugar ingredient in source; defaulted to 0"
+      },
+      "sugar_type": {
+        "raw": "(not present in source)",
+        "method": "manual",
+        "note": "no sugar ingredient in source; defaulted to 0"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "bread",
+    "water": 61.8605,
+    "salt": 2.3256,
+    "yeast": 0.186,
+    "yeast_type": "instant",
+    "fat": 3.7209,
+    "fat_type": "extra-virgin olive oil",
+    "sugar": 0.0,
+    "sugar_type": null
+  },
+  {
+    "recipe_id": "new_york_017",
+    "style": "new-york",
+    "source": "https://caputoflour.com/blogs/recipes/mimmos-new-york-style-pizza",
+    "raw_text": "20g Olitalia Extra Virgin Olive Oil\n6g Active Yeast\n1kg Caputo Pizzeria Flour\nCaputo Semola (for dusting)\n600g water\n25g honey\n25g kosher salt",
+    "mapping": {
+      "flour": {
+        "raw": "1kg Caputo Pizzeria Flour",
+        "method": "to_grams(kg->g)",
+        "note": "baker's-percentage anchor; Caputo Semola listed for dusting only, excluded"
+      },
+      "flour_type": {
+        "raw": "Caputo Pizzeria Flour",
+        "method": "match_alias"
+      },
+      "water": {
+        "raw": "600g water",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "salt": {
+        "raw": "25g kosher salt",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast": {
+        "raw": "6g Active Yeast",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast_type": {
+        "raw": "Active Yeast",
+        "method": "manual (ingredient list over method)",
+        "note": "ingredient list says 'Active Yeast' but the method step says '6g Instant Yeast'; followed the ingredient list"
+      },
+      "fat": {
+        "raw": "20g Olitalia Extra Virgin Olive Oil",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "fat_type": {
+        "raw": "Extra Virgin Olive Oil",
+        "method": "match_alias"
+      },
+      "sugar": {
+        "raw": "25g honey",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "sugar_type": {
+        "raw": "honey",
+        "method": "match_alias"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "double_zero",
+    "water": 60.0,
+    "salt": 2.5,
+    "yeast": 0.6,
+    "yeast_type": "active-dry",
+    "fat": 2.0,
+    "fat_type": "extra-virgin olive oil",
+    "sugar": 2.5,
+    "sugar_type": "honey"
+  },
+  {
+    "recipe_id": "sicilian_011",
+    "style": "sicilian",
+    "source": "https://caputoflour.com/blogs/recipes/sheet-pan-pizza-dough",
+    "raw_text": "5 ½ Cups Caputo 00 Pizzeria Flour (700g)\n1 ½ Tablespoons Olitalia Extra Virgin Olive Oil (21g)\n2 Cups + 1 Tablespoon Cold Water (490g)\n1 Teaspoon Instant Yeast (4g)\n1 Tablespoon Sugar or Honey (14g)\n1 Tablespoon Salt (19g)",
+    "mapping": {
+      "flour": {
+        "raw": "5 ½ Cups Caputo 00 Pizzeria Flour (700g)",
+        "method": "given gram weight",
+        "note": "baker's-percentage anchor. Style: page title is 'Sheet Pan Pizza Dough'; the headnote and method call it Sicilian-style"
+      },
+      "flour_type": {
+        "raw": "Caputo 00 Pizzeria Flour",
+        "method": "match_alias"
+      },
+      "water": {
+        "raw": "2 Cups + 1 Tablespoon Cold Water (490g)",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "salt": {
+        "raw": "1 Tablespoon Salt (19g)",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast": {
+        "raw": "1 Teaspoon Instant Yeast (4g)",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast_type": {
+        "raw": "Instant Yeast",
+        "method": "match_alias"
+      },
+      "fat": {
+        "raw": "1 ½ Tablespoons Olitalia Extra Virgin Olive Oil (21g)",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "fat_type": {
+        "raw": "Extra Virgin Olive Oil",
+        "method": "match_alias"
+      },
+      "sugar": {
+        "raw": "1 Tablespoon Sugar or Honey (14g)",
+        "method": "given gram weight + to_baker_percentage (first-listed option)"
+      },
+      "sugar_type": {
+        "raw": "Sugar or Honey",
+        "method": "match_alias (first-listed option)",
+        "note": "sugar or honey offered as alternatives; took first-listed (sugar -> white)"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "double_zero",
+    "water": 70.0,
+    "salt": 2.7143,
+    "yeast": 0.5714,
+    "yeast_type": "instant",
+    "fat": 3.0,
+    "fat_type": "extra-virgin olive oil",
+    "sugar": 2.0,
+    "sugar_type": "white"
+  },
+  {
+    "recipe_id": "sicilian_012",
+    "style": "sicilian",
+    "source": "https://ooni.com/blogs/recipes/sicilian-pizza",
+    "raw_text": "21.7oz (615g) bread flour or all-purpose flour\n2 tsp fine sea salt\n2 tsp instant dry yeast\n2 tbsp olive oil, plus more for greasing the pan\n13oz (375g) lukewarm water",
+    "mapping": {
+      "flour": {
+        "raw": "21.7oz (615g) bread flour or all-purpose flour",
+        "method": "given gram weight",
+        "note": "baker's-percentage anchor"
+      },
+      "flour_type": {
+        "raw": "bread flour or all-purpose flour",
+        "method": "match_alias (first-listed option)",
+        "note": "bread or all-purpose offered as alternatives; took first-listed"
+      },
+      "water": {
+        "raw": "13oz (375g) lukewarm water",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "salt": {
+        "raw": "2 tsp fine sea salt",
+        "method": "SALT_DENSITY_G_PER_TSP['table'] + to_baker_percentage",
+        "note": "no gram weight given; fine sea salt is close in grain size to table salt, so used the table density"
+      },
+      "yeast": {
+        "raw": "2 tsp instant dry yeast",
+        "method": "YEAST_DENSITY_G_PER_TSP[instant] + to_baker_percentage",
+        "note": "no gram weight given"
+      },
+      "yeast_type": {
+        "raw": "instant dry yeast",
+        "method": "match_alias"
+      },
+      "fat": {
+        "raw": "2 tbsp olive oil, plus more for greasing the pan",
+        "method": "to_grams(tbsp->g, olive_oil density) + to_baker_percentage",
+        "note": "pan-greasing oil excluded"
+      },
+      "fat_type": {
+        "raw": "olive oil",
+        "method": "match_alias"
+      },
+      "sugar": {
+        "raw": "(not present in source)",
+        "method": "manual",
+        "note": "no sugar ingredient in source; defaulted to 0"
+      },
+      "sugar_type": {
+        "raw": "(not present in source)",
+        "method": "manual",
+        "note": "no sugar ingredient in source; defaulted to 0"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "bread",
+    "water": 60.9756,
+    "salt": 1.9512,
+    "yeast": 1.0081,
+    "yeast_type": "instant",
+    "fat": 4.3759,
+    "fat_type": "extra-virgin olive oil",
+    "sugar": 0.0,
+    "sugar_type": null
+  },
+  {
+    "recipe_id": "sicilian_013",
+    "style": "sicilian",
+    "source": "https://ca.ooni.com/blogs/recipes/nepa-pan-fried-sicilian-style-pizza-dough",
+    "raw_text": "Water 389g (70°F) 58%\nInstant dry yeast 7g 1%\nBread flour 671g 100%\nFine sea salt 13g 2%\nExtra-virgin olive oil 20g 3%, plus extra for drizzling\nPeanut oil 30g, for greasing the pan (or canola / sunflower oil)",
+    "mapping": {
+      "flour": {
+        "raw": "Bread flour 671g 100%",
+        "method": "given gram weight",
+        "note": "baker's-percentage anchor. Style: Northeastern Pennsylvania regional variant, self-labeled Sicilian-style"
+      },
+      "flour_type": {
+        "raw": "Bread flour",
+        "method": "match_alias"
+      },
+      "water": {
+        "raw": "Water 389g (70°F) 58%",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "salt": {
+        "raw": "Fine sea salt 13g 2%",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast": {
+        "raw": "Instant dry yeast 7g 1%",
+        "method": "given gram weight + to_baker_percentage"
+      },
+      "yeast_type": {
+        "raw": "Instant dry yeast",
+        "method": "match_alias"
+      },
+      "fat": {
+        "raw": "Extra-virgin olive oil 20g 3%, plus extra for drizzling",
+        "method": "given gram weight + to_baker_percentage",
+        "note": "30g peanut oil is for greasing the pan (pan-frying), not in the dough; excluded, as is the drizzle"
+      },
+      "fat_type": {
+        "raw": "Extra-virgin olive oil",
+        "method": "match_alias"
+      },
+      "sugar": {
+        "raw": "(not present in source)",
+        "method": "manual",
+        "note": "no sugar ingredient in source; defaulted to 0"
+      },
+      "sugar_type": {
+        "raw": "(not present in source)",
+        "method": "manual",
+        "note": "no sugar ingredient in source; defaulted to 0"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "bread",
+    "water": 57.9732,
+    "salt": 1.9374,
+    "yeast": 1.0432,
+    "yeast_type": "instant",
+    "fat": 2.9806,
+    "fat_type": "extra-virgin olive oil",
+    "sugar": 0.0,
+    "sugar_type": null
+  },
+  {
+    "recipe_id": "neapolitan_012",
+    "style": "neapolitan",
+    "source": "https://www.americastestkitchen.com/recipes/16948-neapolitan-style-pizza",
+    "raw_text": "Flour Paste\n79g water\n16g 00 pizza flour\nDough\n1½ cups plus 2 tablespoons (383 grams) water, divided (118g + 265g)\n2½ teaspoons table salt\n1¼ teaspoons sugar\n½ teaspoon instant or rapid-rise yeast\n4 cups plus 2 tablespoons (591 grams) 00 pizza flour",
+    "mapping": {
+      "flour": {
+        "raw": "Flour Paste: 16g 00 pizza flour / Dough: 4 cups plus 2 tablespoons (591 grams) 00 pizza flour",
+        "method": "flour paste fold-in, summed",
+        "note": "the cooked flour paste (tangzhong-style) is mixed into the dough, so its flour is part of the total: 607g. Baker's-percentage anchor."
+      },
+      "flour_type": {
+        "raw": "00 pizza flour",
+        "method": "match_alias"
+      },
+      "water": {
+        "raw": "Flour Paste: 79g water / Dough: 1½ cups plus 2 tablespoons (383 grams) water, divided",
+        "method": "flour paste fold-in, summed + to_baker_percentage",
+        "note": "462g total water -> ~76% hydration, high for Neapolitan but as published"
+      },
+      "salt": {
+        "raw": "2½ teaspoons table salt",
+        "method": "SALT_DENSITY_G_PER_TSP['table'] + to_baker_percentage",
+        "note": "no gram weight given"
+      },
+      "yeast": {
+        "raw": "½ teaspoon instant or rapid-rise yeast",
+        "method": "YEAST_DENSITY_G_PER_TSP[instant] + to_baker_percentage",
+        "note": "no gram weight given"
+      },
+      "yeast_type": {
+        "raw": "instant or rapid-rise yeast",
+        "method": "match_alias"
+      },
+      "fat": {
+        "raw": "(not present in source)",
+        "method": "manual",
+        "note": "no fat ingredient in source; defaulted to 0"
+      },
+      "fat_type": {
+        "raw": "(not present in source)",
+        "method": "manual",
+        "note": "no fat ingredient in source; defaulted to 0"
+      },
+      "sugar": {
+        "raw": "1¼ teaspoons sugar",
+        "method": "to_grams(tsp->g, sugar_white density) + to_baker_percentage",
+        "note": "no gram weight given"
+      },
+      "sugar_type": {
+        "raw": "sugar",
+        "method": "match_alias"
+      }
+    },
+    "flour": 100.0,
+    "flour_type": "double_zero",
+    "water": 76.112,
+    "salt": 2.4712,
+    "yeast": 0.2554,
+    "yeast_type": "instant",
+    "fat": 0.0,
+    "fat_type": null,
+    "sugar": 0.8577,
+    "sugar_type": "white"
   }
 ]
