@@ -45,6 +45,7 @@ from capstone.models.centroids import (
     styles,
     target_distance,
 )
+from capstone.models.evaluate import JUDGES, evaluate_adjustments, judge_column
 from capstone.models.network import build_graph
 
 __all__ = [
@@ -58,6 +59,9 @@ __all__ = [
     "cross_validate",
     "cv_permutation_importance",
     "drop_one_feature",
+    "evaluate_adjustments",
+    "JUDGES",
+    "judge_column",
     "feature_group_ablation",
     "logistic_coefficients",
     "make_cv",

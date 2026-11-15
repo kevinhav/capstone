@@ -13,7 +13,7 @@ from capstone.data import (
     to_baker_percentage,
     to_grams,
 )
-from capstone.models import adjust, adjust_many, build_search_space, fit_centroids, predict, resolve_target
+from capstone.models import adjust, adjust_many, build_search_space, evaluate_adjustments, fit_centroids, predict, resolve_target
 
 
 @pytest.fixture(scope="module")
@@ -151,3 +151,14 @@ def test_naming_an_unknown_type_is_not_a_swap(recipes, space):
     known = (before != UNKNOWN) & (before != after) & (before != ABSENT) & (after != ABSENT)
     assert (info["n_type_changes"] == known.sum(axis=1)).all()
     assert _change(Col.flour_type, UNKNOWN, "bread") == "specified"
+
+
+def test_adjustment_evaluation_on_real_recipes(recipes, space):
+    from capstone.models.evaluate import N_RECIPES, SUCCESS, SUCCESS_HI, SUCCESS_LO, TARGET_BEFORE, judge_column
+
+    ev = evaluate_adjustments(recipes, space, STYLES, n_boot=50)
+    assert list(ev.index) == [str(s) for s in STYLES]
+    assert (ev[N_RECIPES] == [int((recipes[Col.style] != s).sum()) for s in STYLES]).all()
+    assert ((ev[SUCCESS_LO] <= ev[SUCCESS]) & (ev[SUCCESS] <= ev[SUCCESS_HI])).all()
+    assert (ev[SUCCESS] >= ev[TARGET_BEFORE]).all()  # adjusting never moves recipes away on balance
+    assert ev[judge_column("random forest")].between(0, 1).all()

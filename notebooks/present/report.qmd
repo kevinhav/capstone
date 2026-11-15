@@ -60,6 +60,19 @@ from capstone.models import (
     target_distance,
 )
 from capstone.models.adjust import CHANGE_COUNTS, DISTANCE_AFTER, DISTANCE_BEFORE
+from capstone.models.evaluate import (
+    JUDGES,
+    N_RECIPES,
+    NEAREST_AFTER,
+    NEAREST_BEFORE,
+    NEAREST_REFERENCE,
+    SUCCESS,
+    SUCCESS_HI,
+    SUCCESS_LO,
+    TARGET_BEFORE,
+    evaluate_adjustments,
+    judge_column,
+)
 from capstone.utilities import setup_logging
 
 setup_logging("WARNING")
@@ -659,6 +672,32 @@ Markdown(
     .T
     .rename_axis("Mean change")
     .to_markdown(floatfmt=".2f")
+)
+```
+
+```{python}
+#| label: tbl-adjust-eval
+#| tbl-cap: "Every real recipe of the other two styles adjusted toward each target style $s$: share whose nearest centroid is $s$ (95% bootstrap interval), share labelled $s$ by independent classifiers fit out of fold, mean distances, and mean changes"
+evaluation = evaluate_adjustments(recipes, space, STYLES)
+share = "{:.2f}".format
+Markdown(
+    pd.DataFrame({
+        "Recipes adjusted": evaluation[N_RECIPES].map(str),
+        "Nearest centroid is $s$, before": evaluation[TARGET_BEFORE].map(share),
+        "Nearest centroid is $s$, after": evaluation[SUCCESS].map(share)
+        + " [" + evaluation[SUCCESS_LO].map(share) + ", " + evaluation[SUCCESS_HI].map(share) + "]",
+        **{f"{j[0].upper()}{j[1:]} labels $s$, after": evaluation[judge_column(j)].map(share) for j in JUDGES},
+        r"$\delta_s(\mathbf{x})$": evaluation[DISTANCE_BEFORE].map(share),
+        r"$\delta_s(\mathbf{x}')$": evaluation[DISTANCE_AFTER].map(share),
+        "Distance to nearest real recipe of $s$, before": evaluation[NEAREST_BEFORE].map(share),
+        "Distance to nearest real recipe of $s$, after": evaluation[NEAREST_AFTER].map(share),
+        "Real recipes of $s$ to their nearest neighbour": evaluation[NEAREST_REFERENCE].map(share),
+        **{sym: evaluation[c].map(share) for c, sym in zip(CHANGE_COUNTS, (r"$n_{\text{type}}$", r"$n_{\text{remove}}$", r"$n_{\text{add}}$"))},
+    })
+    .rename(index=label)
+    .T
+    .rename_axis("Target style $s$")
+    .to_markdown(disable_numparse=True)
 )
 ```
 
