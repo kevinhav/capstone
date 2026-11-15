@@ -617,7 +617,7 @@ We define the criterion for each ingredient type; squared difference between tar
 
 $$
 \begin{aligned}
-\Delta_{\text{ratio}} &= \lVert \mathbf{z}' - \mathbf{z} \rVert^2 \\
+\Delta_{\text{ratio}} &= \sum_{i \in \mathcal{I} \setminus \{\text{flour}\},\ p'_i > 0} \left( z'_i - z_i \right)^2 \\
 n_{\text{type}} &= \big\lvert \{ i \in \mathcal{K} : t'_i \neq t_i \} \big\rvert \\
 n_{\text{remove}} &= \big\lvert \mathcal{E}(r) \setminus \mathcal{E}(r') \big\rvert \\
 n_{\text{add}} &= \big\lvert \mathcal{E}(r') \setminus \mathcal{E}(r) \big\rvert
@@ -635,7 +635,7 @@ $$ {#eq-change-cost}
 Finally, our adjusted recipe $r^{*}$ is the minimum value of the combined distance to target and cost of any changed ingredients.
 $$
 r^{*} = \operatorname*{arg\,min}_{r'} \Big[ \underbrace{\lambda_{\text{target}} \lVert \mathbf{x}' - \tilde{\mathbf{c}} \rVert^2}_{\text{distance to target}} + \underbrace{C(r' ; r)}_{\text{cost of change}} \Big]
-\quad \text{subject to} \quad \ell_i \le p'_i \le u_i
+\quad \text{subject to} \quad \ell_i \le p'_i \le u_i, \quad \mathcal{E}(r') \setminus \mathcal{E}(r) \subseteq \mathcal{E}_{+}
 $$ {#eq-optimization}
 
 This approach allows the target to be any point in feature space, the main implication being that a pizzialo could specify some blend of styles and adjust some recipe towards some point between their centroids. 
@@ -727,7 +727,7 @@ The application can be found at: <streamlit link>
 | Symbol | Meaning |
 |:--|:----------|
 | $r$ | A dough formula (recipe), represented as in @eq-recipe |
-| $\mathcal{D}$ | The reference corpus of curated formulas, $\lvert\mathcal{D}\rvert = 41$ |
+| $\mathcal{D}$ | The reference corpus of curated formulas, $\lvert\mathcal{D}\rvert = 40$ |
 | $\mathcal{I}$ | Ingredients measured by mass: flour, water, salt, yeast, fat, sugar |
 | $\mathcal{K}$ | Ingredients that also have a type: flour, yeast, fat, sugar ($\mathcal{K} \subset \mathcal{I}$) |
 | $i$ | Index over ingredients |
@@ -755,7 +755,8 @@ The application can be found at: <streamlit link>
 | $\tilde{\mathbf{c}}$ | Target point in feature space, the $\omega$-weighted blend of style centroids (@eq-target), $\in \mathbb{R}^d$ |
 | $\mathcal{E}$ | Optional enrichment ingredients: fat, sugar ($\mathcal{E} \subset \mathcal{K}$) |
 | $\mathcal{E}(r)$ | Enrichments present in formula $r$ (@eq-change-terms) |
-| $\Delta_{\text{ratio}}$ | Squared change in standardized ratios between $r$ and $r'$ (@eq-change-terms) |
+| $\mathcal{E}_{+}$ | Enrichments the user allows to be added ($\mathcal{E}_{+} \subseteq \mathcal{E}$, all of $\mathcal{E}$ by default) (@eq-optimization) |
+| $\Delta_{\text{ratio}}$ | Squared change in standardized ratios between $r$ and $r'$, over the ingredients present in $r'$; an added enrichment counts as a change from $p_i = 0$ (@eq-change-terms) |
 | $n_{\text{type}},\ n_{\text{remove}},\ n_{\text{add}}$ | Number of ingredient types swapped, enrichments removed, and enrichments added (@eq-change-terms) |
 | $C(r' ; r)$ | Cost of changing formula $r$ into candidate $r'$ (@eq-change-cost) |
 | $\lambda_{\text{target}},\ \lambda_{\text{ratio}},\ \lambda_{\text{type}},\ \lambda_{\text{remove}},\ \lambda_{\text{add}}$ | Weights for the distance to $\tilde{\mathbf{c}}$, ratio changes, type swaps, removed enrichments, and added enrichments (@eq-change-cost, @eq-optimization) |

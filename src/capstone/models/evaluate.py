@@ -6,7 +6,7 @@ independent classifiers trained out of fold agree, how far it moved toward the t
 centroid, how close it ends to a real recipe of the target style, and how much it changed.
 """
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from typing import Final
 
 import numpy as np
@@ -18,7 +18,7 @@ from sklearn.model_selection import StratifiedKFold
 
 from capstone.config import FEATURES, LossWeights, Col, CVConfig, Style
 from capstone.features import transform
-from capstone.models.adjust import CHANGE_COUNTS, DISTANCE_AFTER, DISTANCE_BEFORE, SearchSpace, adjust_many
+from capstone.models.adjust import CHANGE_COUNTS, DISTANCE_AFTER, DISTANCE_BEFORE, ENRICHMENTS, SearchSpace, adjust_many
 from capstone.models.centroids import distances, predict
 from capstone.models.classify import make_models
 
@@ -86,6 +86,7 @@ def evaluate_adjustments(
     targets: Sequence[Style | str],
     *,
     weights: LossWeights = LossWeights(),
+    addable: Collection[Col] = ENRICHMENTS,
     judges: Sequence[str] = JUDGES,
     config: CVConfig = CVConfig(),
     n_boot: int = 1000,
@@ -97,6 +98,7 @@ def evaluate_adjustments(
         space: Search space of the fitted centroid pipeline (see `build_search_space`).
         targets: Styles to adjust toward.
         weights: Loss weights for the adjuster.
+        addable: Optional ingredients the adjuster may add (see `adjust`).
         judges: Names from `make_models` used as independent classifiers, each fit out of fold.
         config: Fold count and seed for the judges and the bootstrap.
         n_boot: Bootstrap resamples for the success-rate interval.
@@ -111,7 +113,7 @@ def evaluate_adjustments(
     """
     style = recipes[Col.style]
     sources = {str(t): recipes[style != t] for t in targets}
-    runs = {t: adjust_many(src, t, space, weights) for t, src in sources.items()}
+    runs = {t: adjust_many(src, t, space, weights, addable) for t, src in sources.items()}
     verdicts = _judge_out_of_fold(recipes, {t: adjusted for t, (adjusted, _) in runs.items()}, judges, config)
 
     rows = {}

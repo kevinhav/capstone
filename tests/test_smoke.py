@@ -75,12 +75,23 @@ def test_resolve_target_normalizes(pipe):
         resolve_target({"neapolitan": 0}, styles)
 
 
-def test_default_weights_never_add_ingredients(recipes, space):
+def test_disallowed_additions_never_happen(recipes, space):
     frank = make_frankensteins(recipes, FrankensteinConfig(n=40, seed=1))
     for style in STYLES:
-        adjusted, info = adjust_many(frank, style, space)
+        adjusted, info = adjust_many(frank, style, space, addable=())
         assert info["n_added"].sum() == 0
         assert ((frank[Col.fat] == 0) <= (adjusted[Col.fat] == 0)).all()
+    adjusted, _ = adjust_many(frank, "new-york", space, addable=[Col.sugar])
+    assert ((frank[Col.fat] == 0) <= (adjusted[Col.fat] == 0)).all()  # fat stays out, sugar may come in
+
+
+def test_default_weights_add_enrichments_within_observed_range(recipes, space):
+    lean = recipes[(recipes[Col.fat] == 0) & (recipes[Col.style] != "new-york")]
+    adjusted, info = adjust_many(lean, "new-york", space)
+    assert info["n_added"].sum() > 0
+    added = adjusted.loc[adjusted[Col.fat] > 0, Col.fat]
+    used = recipes.loc[recipes[Col.fat] > 0, Col.fat]
+    assert added.between(used.min(), used.max()).all()
 
 
 def test_adjustment_moves_toward_target(recipes, pipe, space):
@@ -116,6 +127,8 @@ def test_unchanged_types_are_not_reported_as_changes():
 
     assert _change(Col.flour_type, "double_zero", "double_zero") == ""
     assert _change(Col.flour_type, "high-gluten", "double_zero") == "swapped"
+    assert _change(Col.sugar_type, "none", "white") == "added"
+    assert _change(Col.fat_type, "lard", "none") == "removed"
 
 
 def test_type_changes_are_real(recipes, space):

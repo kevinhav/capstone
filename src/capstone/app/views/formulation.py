@@ -9,6 +9,7 @@ import streamlit as st
 from capstone.app.common import BASE_RECIPE_KEY, DEFAULT_RECIPE, INGREDIENT_ORDER, AppModel, label, load_model
 from capstone.app.plots import chart_height, mix_bars
 from capstone.config import (
+    ABSENT,
     CATEGORICAL,
     OPTIONAL,
     NUMERIC,
@@ -149,10 +150,24 @@ def _target_inputs() -> dict[str, float]:
     return {s: v for s, v in shares.items() if v}
 
 
+def _addable_inputs() -> list[Col]:
+    """Optional ingredients the user is willing to add if their dough lacks them; all by default."""
+    picked = st.pills(
+        "Ingredients you can add", list(OPTIONAL), selection_mode="multi", default=list(OPTIONAL),
+        format_func=label,
+        help="Deselect an ingredient to keep it out of your dough. Suggestions only add what is selected here.",
+    )
+    return list(picked)
+
+
 def _change(col: Col, before: object, after: object) -> str:
     if col in CATEGORICAL:
         if before == after:
             return ""
+        if before == ABSENT:
+            return "added"
+        if after == ABSENT:
+            return "removed"
         return "specified" if before == UNKNOWN else "swapped"
     if before == 0 and after > 0:
         return "added"
@@ -188,9 +203,9 @@ def _summary(result: Adjustment, n_amounts: int) -> str:
     return ", ".join(parts) + "."
 
 
-def _results(model: AppModel, recipe: pd.Series, shares: dict[str, float]) -> pd.Series:
+def _results(model: AppModel, recipe: pd.Series, shares: dict[str, float], addable: list[Col]) -> pd.Series:
     """Adjust toward the target and show affinity, style mix, and the changes. Returns the adjusted recipe."""
-    result = adjust(recipe, shares, model.space)
+    result = adjust(recipe, shares, model.space, addable=addable)
     frame = pd.DataFrame([recipe, result.recipe.rename(ADJUSTED)])
     aff = affinity(model.pipe, frame)
     mixes = estimate_mix(model.pipe, frame)
@@ -337,6 +352,7 @@ def render() -> None:
     st.header("Target style")
     st.caption("Pick the style you want your dough to be more like. Everything below compares your dough with it.")
     shares = _target_inputs()
+    addable = _addable_inputs()
 
     inputs, results = st.columns([1, 2], gap="large")
     with inputs:
@@ -353,7 +369,7 @@ def render() -> None:
                 icon=":material/warning:",
             )
         if shares:
-            versions[ADJUSTED] = _results(model, recipe, shares)
+            versions[ADJUSTED] = _results(model, recipe, shares, addable)
             styles[ADJUSTED] = Style(max(shares, key=shares.get))  # a blend sizes like its largest style
         else:
             st.info("Choose a target style (or a blend) above to see suggested changes.")

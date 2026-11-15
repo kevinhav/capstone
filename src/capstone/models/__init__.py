@@ -1,4 +1,5 @@
 from capstone.models.adjust import (
+    ENRICHMENTS,
     Adjustment,
     LossBreakdown,
     SearchSpace,
@@ -49,6 +50,7 @@ from capstone.models.evaluate import JUDGES, evaluate_adjustments, judge_column
 from capstone.models.network import build_graph
 
 __all__ = [
+    "ENRICHMENTS",
     "BASELINE",
     "CHANCE",
     "COMPARED",

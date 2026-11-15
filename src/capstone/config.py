@@ -274,14 +274,15 @@ type Target = Style | str | StyleMix
 @dataclass(frozen=True)
 class LossWeights:
     """Relative strictness of each kind of change made by the recipe adjuster.
-    Defaults give a roughly 1 : 10 : 100 hierarchy between ratio tweaks, type
-    swaps, and brand-new ingredients."""
+    Ratio tweaks are lenient; type swaps, removals, and additions each carry a fixed
+    cost of the same size. An added ingredient's amount is also charged as a ratio
+    change from zero, so small additions are cheaper than large ones."""
 
     target: float = 1.0  # pull toward the target centroid
     ratio: float = 0.1  # per squared z-unit change to a main ingredient ratio (lenient)
     type_change: float = 1.0  # per ingredient whose type is swapped (moderate)
     remove: float = 1.0  # per optional ingredient dropped
-    add: float = 10.0  # per optional ingredient not in the original (very strict)
+    add: float = 1.0  # per optional ingredient not in the original, plus its amount as a ratio change
 
 
 @dataclass(frozen=True)

@@ -4,10 +4,14 @@ For a recipe x and target centroid c (a single style or a share-weighted blend),
 minimizes
 
     L(x') = w_target * ||phi(x') - c||^2          (pull toward the target)
-          + w_ratio  * sum_j (z'_j - z_j)^2        (changed ratios, lenient)
+          + w_ratio  * sum_j (z'_j - z_j)^2        (changed ratios, lenient; over ingredients
+                                                    present in x', so an added amount is a
+                                                    change from zero)
           + w_type   * #(ingredient types swapped) (moderate; an unknown type is free to name)
           + w_remove * #(optional ingredients dropped)
-          + w_add    * #(optional ingredients added) (very strict)
+          + w_add    * #(optional ingredients added)
+
+subject to every added optional ingredient being one the caller allows to be added.
 
 where phi is the centroid pipeline's preprocessing (z-scored ratios + one-hot types).
 Types are discrete, so every combination of (flour, yeast, fat, sugar) type is
@@ -16,6 +20,7 @@ quadratic whose solution is the unconstrained optimum clipped to the observed ra
 of each ingredient, so the search is exact.
 """
 
+from collections.abc import Collection
 from dataclasses import dataclass
 from itertools import product
 from typing import Final
@@ -49,6 +54,9 @@ from capstone.models.centroids import (
     styles,
     target_distance,
 )
+
+# optional ingredients that may be added unless the caller restricts them
+ENRICHMENTS: Final[tuple[Col, ...]] = tuple(OPTIONAL)
 
 
 # Data is small enough that we can go through every combination
@@ -144,6 +152,7 @@ def _adjust_one(
     target: dict[str, float],
     space: SearchSpace,
     w: LossWeights,
+    addable: Collection[Col],
 ) -> Adjustment:
     # Compute scaled ratios and then search over all combinations
     c_num = centroid[[feature_name(c) for c in NUMERIC]].to_numpy(dtype=float)
@@ -152,19 +161,21 @@ def _adjust_one(
     orig_present = {r: recipe[r] > 0 for r in OPTIONAL}
     n_combos = len(space.combos)
 
-    # Compute the optimal z, but only for values we've actually seen
+    # Compute the optimal z, but only for values we've actually seen. For an absent
+    # ingredient z0 is the z-score of zero, so this is also the optimal amount to add
     keep = np.clip(
         (w.target * c_num + w.ratio * z0) / (w.target + w.ratio), space.lo_z, space.hi_z
     )
-    added = np.clip(c_num, space.lo_z, space.hi_z)
 
     z = np.tile(keep, (n_combos, 1))
     counted = np.ones(
         (n_combos, len(NUMERIC)), dtype=bool
     )  # dims whose ratio change is penalized
     n_add, n_remove = np.zeros(n_combos), np.zeros(n_combos)
+    blocked = np.zeros(n_combos, dtype=bool)  # combos adding an ingredient the caller disallows
 
-    # Handle optional ingredients, we don't want to remove if in original recipe
+    # Optional ingredients: removing one is counted, not its ratio change; adding one is
+    # counted and its amount is penalized as a ratio change from zero
     for r in OPTIONAL:
         j = NUMERIC.index(r)
         here = space.present[r]
@@ -173,8 +184,9 @@ def _adjust_one(
         if orig_present[r]:
             n_remove += ~here
         else:
-            z[here, j], counted[here, j] = added[j], False
             n_add += here
+            if r not in addable:
+                blocked |= here
 
     # Number of categorical changes; naming a type the source left unstated is not a swap
     n_type = np.zeros(n_combos)
@@ -194,7 +206,8 @@ def _adjust_one(
         "remove": w.remove * n_remove,
         "add": w.add * n_add,
     }
-    best = int(np.argmin(sum(components.values())))  # This is our best combo
+    total = np.where(blocked, np.inf, sum(components.values()))
+    best = int(np.argmin(total))  # This is our best combo
 
     # Compute and return the adjusted recipe with loss details
     adjusted = recipe[FEATURES].copy()
@@ -219,6 +232,7 @@ def adjust(
     target: Target,
     space: SearchSpace,
     weights: LossWeights = LossWeights(),
+    addable: Collection[Col] = ENRICHMENTS,
 ) -> Adjustment:
     """Adjust one recipe toward a style or style mix with minimal change.
 
@@ -227,11 +241,13 @@ def adjust(
         target: A style name, or {style: share} (shares are normalized).
         space: From `build_search_space`.
         weights: Strictness of each kind of change.
+        addable: Optional ingredients the adjuster may add if the recipe lacks them;
+            the others are never added. Defaults to all of them.
     """
     mix = resolve_target(target, styles(space.pipe))
     centroid = blend_centroid(space.pipe, mix)
     return _adjust_one(
-        recipe, centroid, _cat_distance(space, centroid), mix, space, weights
+        recipe, centroid, _cat_distance(space, centroid), mix, space, weights, addable
     )
 
 
@@ -241,8 +257,9 @@ def adjust_many(
     target: Target,
     space: SearchSpace,
     weights: LossWeights = LossWeights(),
+    addable: Collection[Col] = ENRICHMENTS,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Adjust every recipe toward `target`.
+    """Adjust every recipe toward `target`. `weights` and `addable` are as in `adjust`.
 
     Returns:
         (adjusted recipes, per-recipe loss breakdown and change counts), both indexed like `recipes`.
@@ -252,7 +269,7 @@ def adjust_many(
     cat_dist = _cat_distance(space, centroid)
     adjusted, info = [], []
     for rid, recipe in recipes.iterrows():
-        a = _adjust_one(recipe, centroid, cat_dist, mix, space, weights)
+        a = _adjust_one(recipe, centroid, cat_dist, mix, space, weights, addable)
         adjusted.append(a.recipe.rename(rid))
         info.append(
             {

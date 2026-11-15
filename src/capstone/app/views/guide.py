@@ -90,7 +90,8 @@ def render() -> None:
         "- **Nudging an amount** (a bit more water, a bit less yeast) is cheap.\n"
         "- **Swapping a type** (bread flour for Tipo 00) costs more.\n"
         "- **Dropping** fat or sugar costs about as much as a swap.\n"
-        "- **Adding** an ingredient your recipe doesn't have costs the most, so it rarely happens.\n\n"
+        "- **Adding** fat or sugar your recipe doesn't have costs about as much as a swap, plus more the "
+        "more of it is added, so additions stay small. Use **Ingredients you can add** to rule one out.\n\n"
         "Suggested amounts always stay within the range seen in the curated recipes."
     )
 
