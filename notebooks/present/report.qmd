@@ -28,7 +28,7 @@ from IPython.display import Markdown
 from sklearn.decomposition import PCA
 
 from capstone import visualizations as viz
-from capstone.config import FEATURES, INGREDIENT_ORDER, NUMERIC, STYLES, Col, CVConfig, Style, label
+from capstone.config import FEATURES, INGREDIENT_ORDER, NUMERIC, OPTIONAL, STYLES, Col, CVConfig, LossWeights, Style, label
 from capstone.data import (
     TOTAL,
     ingredient_table,
@@ -60,6 +60,18 @@ from capstone.models import (
     target_distance,
 )
 from capstone.models.adjust import CHANGE_COUNTS, DISTANCE_AFTER, DISTANCE_BEFORE
+from capstone.models.sensitivity import (
+    ACCURACY,
+    ACCURACY_SD,
+    JUDGE_MEAN,
+    N_LACKING,
+    NET_GAIN,
+    WEIGHT_SENSITIVE_MODELS,
+    addition_gains,
+    penalty_sensitivity,
+    success_column,
+    type_weight_sensitivity,
+)
 from capstone.models.evaluate import (
     JUDGES,
     N_RECIPES,
@@ -99,6 +111,14 @@ def profile_table(s: Style) -> Markdown:
 ```
 
 ## Abstract
+
+<!-- TODO(feedback): reviewer items and where they are addressed. Remove these TODO comments before submitting.
+1. Model validation (CV variability, leakage): tbl-cv-results now has per-repeat SD; label leakage fixed in the data
+   (see TODOs in "Processing" and "Classification Models").
+2. Optimization evaluated quantitatively: tbl-adjust-eval (real recipes, out-of-fold independent classifiers).
+3. Sensitivity: tbl-addition-gains, tbl-penalty-sensitivity, tbl-type-weight.
+4. Literature review: still open (formulation/mixture design, counterfactual explanations, small-sample CV, leakage).
+-->
 
 ## Motivation
 
@@ -197,6 +217,9 @@ $$
 $$
 
 Each ingredient $i \in \mathcal{K} = \{\text{flour}, \text{yeast}, \text{fat}, \text{sugar}\}$ also has a type $t_i$, drawn from a fixed vocabulary $\mathcal{T}_i$. For example, $\mathcal{T}_{\text{flour}} = \{\text{all-purpose}, \text{bread}, \text{double zero}, \text{high-gluten}, \text{semolina}\}$. The notation used throughout is collected in @tbl-notation.
+
+<!-- TODO(prose): T_flour lists the stated flour types. Recipes may now record a type as "unknown"; it is imputed in
+the pipeline and is never a level of its own, so it is not part of T_i. Consider saying so here or in Processing. -->
 
 This is a natural representation for dough formulas; baking percentages are captured as numerical features, while the classes of these ingredients, such as high-gluten or all-purpose flours, is encoded as categorical. These are the core features that are present in every formula. Below is an example of one such formula in the schema of our dataset.
 
@@ -307,6 +330,16 @@ Each ingredient mass was divided by the flour mass as in @eq-bakers. When a form
 
 Flour, water, salt, and yeast types were assigned a default value if not specified. Types were normalized to a finite list of options based on our domain knowledge. For example, King Arthur Sir Lancelot is a relatively high-gluten flour product, and as such would be assigned a "high gluten" flour type.
 
+<!-- TODO(prose): this paragraph is now out of date. Types are NO LONGER defaulted when unstated.
+- Old behaviour: an unstated flour type got the style's conventional flour (00 / high-gluten / bread), which put the
+  style label into a feature (label leakage). Yeast defaulted to instant, unnamed "oil" to vegetable oil.
+- Now: unstated types are recorded as "unknown" (10 fields in 9 recipes: 5 flour, 2 yeast, 3 fat). The pipeline encodes
+  "unknown" as the training fold's share of each type among recipes that use the ingredient (one-hot analogue of mean
+  imputation), fit inside each CV fold, so it carries no style signal and is never offered by the adjuster.
+- Types inferred from evidence in the source (dominant flour of a blend, product abbreviations, narrative) are kept.
+- Accuracy cost of removing the leak: about 2-5 points (e.g. SVM 0.81 -> 0.78, affinity 0.69 -> 0.66).
+- Check tbl-conversions: confirm the "defaulted type" row still means what the text says. -->
+
 Sourdough starters, poolishes, or other developed bacterial colonies were converted into respective water, flour, and yeast quantities following expert heuristics.
 
 Volume measurements are a common source of inconsistency - these were first converted to metric measurements by expert guided conversions before then computing the remaining vector quantities. Note that formulas using volume measurements are imprecise by nature, and this convention will bias these formulas.
@@ -325,6 +358,11 @@ Markdown(processing_counts(provenance, style).rename(columns=label).rename_axis(
 ### Contributed dataset of formulae
 
 Our final dataset is a small and curated with reasonable class representation. We would encourage further development of this dataset and be interested in the results.
+
+<!-- TODO(prose): corpus is now 40 recipes (12 Neapolitan, 17 New York, 11 Sicilian). sicilian_004 was removed as an
+exact duplicate of sicilian_002 (same forum post, msg=218034), which could sit in both a training and a test fold.
+new_york_003/004 share a post but are distinct formulas and were kept; we decided against grouping CV folds by post
+because a post can collect formulas from different authors. -->
 
 ```{python}
 #| label: tbl-style-counts
@@ -555,6 +593,16 @@ Markdown(
 ```
 
 
+<!-- TODO(prose): update this section for the new tbl-cv-results.
+- Variability: the "± fold SD" (about 0.11-0.16) is the spread over single folds of only 8 test recipes, where one
+  recipe moves accuracy by 0.125. The new "repeat SD" column (about 0.03-0.07) is the spread of each model's estimated
+  accuracy over the 20 repeats; that is the honest uncertainty and answers the reviewer's variability point.
+- Leakage: preprocessing is fit inside each fold; label-derived type defaults and the duplicate recipe were removed.
+- Numbers to update in the next paragraphs (current data):
+  - all compared models agree on 58.5% of the corpus (text says ~49%); all match the expert label on 48.8% (text ~47%).
+  - per-style F1: SVM is best for New York (0.80) and Sicilian (0.75), random forest for Neapolitan (0.84). The text's
+    claim that the affinity baseline is best for Sicilian no longer holds (0.58).
+  - top models: SVM 0.78, random forest 0.77, logistic regression 0.75, k-NN 0.68, affinity 0.66, majority 0.42. -->
 Our models do outperform class majority base rates, indicating that there is predictive signal. We also see a high degree of congruency between the models, with a few outliers, suggesting that indeed the corpus agrees with its class labeling. The affinity baseline also does quite well compared to the statistical models, implying that it is a reasonable choice for assigning class membership. 
 
 In our testing, all models agreed amongst themselves about 49% of the corpus, and with the experts as well about 47%. Interestingly, each of our top three models seemed biased for accuracy towards one of each style; the affinity baseline for Sicillian, random forest for Neapolitan, and SVM for New York.
@@ -571,6 +619,9 @@ viz.confusion_matrices({
 });
 ```
 
+<!-- TODO(prose): outliers on current data, as share of predictions correct: neapolitan_001 0.00, new_york_011 0.04,
+sicilian_010 0.05. tbl-outliers still lists neapolitan_001 and sicilian_010; decide whether to add new_york_011 (the
+caption "every model misclassified" is still about right for the first two). -->
 Before moving on, we'd like to point out a particular outlier formula that all models disagreed on. 
 
 ```{python}
@@ -600,6 +651,18 @@ In developing this algorithm, we've accomodated two additional points we believe
 Firstly, a user has a specific environment which is difficult to comprehensively measure; availability of ingredients, altitude, humidity, equipment, and so on. We assume that the user has some starting formulation (or is willing to choose a starting formulation) they are content with, but that they would like to adjust - this initial input formulation is assumed to encode these environment variables to some degree. Under this assumption, the algorithm attempts to shrink the style distance *minimally*, such that much of the author's original recipe is perserved, while still providing new ingredient vectors that are closer to the target style. 
 
 Secondly, users may wish to retain some ingredients that are not present in a typical style. As an example, many home cooks will not have access to commercial flours commonly used in New York style pizza. Restaurants may advertise their use of local ingredients, including a flour with a specific protein content. A bakery with an organic live yeast culture may not want to substitute with commercially produced instant yeast. Thus, the algorithm is also penalized for substituting or removing ingredients entirely.
+
+<!-- TODO(prose): the algorithm changed; update the description of additions.
+- Before: adding fat or sugar cost lambda_add = 10. The largest benefit from any addition is about 2.7, so nothing was
+  ever added. The method could only move recipes toward leaner styles: success toward New York 0.30, Sicilian 0.45.
+- Now: an added ingredient's amount counts as a ratio change from zero (Delta_ratio sums over ingredients present in
+  r', see eq-change-terms) and the optimizer chooses the amount; the fixed add cost is 1, same as a swap or removal.
+- New user switch E_+ (constraint in eq-optimization): the user picks which enrichments may be added ("Ingredients you
+  can add" in the app). This replaces a tuned penalty with an explicit choice, in line with the motivation of keeping
+  the baker's own ingredients. E_+ = empty set reproduces the old algorithm exactly.
+- Also: naming a type the source left unknown is not counted as a swap.
+- n_type in eq-change-terms is still written as |{i : t'_i != t_i}|; the code excludes swaps caused by adding/removing
+  an ingredient and naming an unknown type. Ask Claude to make the equation exact if you want. -->
 
 Considering two formula vectors, $\mathbf{x}$ as the original and $\mathbf{x}`$ as the target;
 
@@ -701,6 +764,106 @@ Markdown(
 )
 ```
 
+<!-- TODO(prose): main points of tbl-adjust-eval (real recipes of the other styles adjusted toward each target).
+- Success (nearest centroid becomes the target) is 1.00 for all three targets.
+- Independent check: random forest, logistic regression and SVM, each trained out of fold so they never saw the recipe
+  they judge, label 78-100% of adjusted recipes as the target. So the adjuster is not just gaming the centroid metric.
+- Plausibility: adjusted recipes end about as close to a real recipe of the target style as real recipes are to each
+  other (or closer), i.e. they land inside the real data, not in an empty region.
+- Additions: about 1.3 per New York-bound recipe (fat ~2.2%, sugar ~1.3%), 0.55 per Sicilian-bound (fat ~2.5%);
+  amounts are in the range of real recipes. Neapolitan is reached by removing fat/sugar.
+- Caveat: n is 23-29 per target and the adjusted recipes were not baked. -->
+
+```{python}
+#| label: tbl-addition-gains
+#| tbl-cap: 'Reduction in the adjuster''s loss from adding each enrichment, before the fixed cost $\lambda_{\text{add}}$, for the real recipes of the other styles that lack it (count in parentheses). The reduction is the same for every such recipe, so an enrichment is added to all of them when $\lambda_{\text{add}}$ is below it and to none otherwise'
+gains = addition_gains(recipes, space, STYLES)
+Markdown(
+    (gains[NET_GAIN].map("{:.2f}".format) + " (" + gains[N_LACKING].map(str) + ")")
+    .unstack()
+    .reindex(index=[str(s) for s in STYLES], columns=[str(c) for c in OPTIONAL])
+    .rename(index=label, columns=label)
+    .rename_axis("Target style")
+    .to_markdown(disable_numparse=True)
+)
+```
+
+```{python}
+#| label: tbl-penalty-sensitivity
+#| tbl-cap: 'Adjustment of the real recipes of the other styles toward each target, with one change weight scaled by 1/4 or 4 at a time, or with additions switched off ($\mathcal{E}_{+} = \emptyset$): share whose nearest centroid is the target, share labelled the target by the independent classifiers (mean over targets and classifiers), and mean changes'
+WEIGHT_SYMBOLS = {
+    "target": r"\lambda_{\text{target}}", "ratio": r"\lambda_{\text{ratio}}", "type_change": r"\lambda_{\text{type}}",
+    "remove": r"\lambda_{\text{remove}}", "add": r"\lambda_{\text{add}}",
+}
+defaults = LossWeights()
+
+
+def setting_label(parameter: str, value: object) -> str:
+    """Row label for one setting of the penalty sweep."""
+    if parameter in WEIGHT_SYMBOLS:
+        return f"${WEIGHT_SYMBOLS[parameter]} = {value:g}$"
+    if parameter == "addable":
+        return r"No additions, $\mathcal{E}_{+} = \emptyset$"
+    return "Default: " + ", ".join(f"${WEIGHT_SYMBOLS[k]} = {getattr(defaults, k):g}$" for k in WEIGHT_SYMBOLS)
+
+
+penalties = penalty_sensitivity(recipes, space, STYLES)
+Markdown(
+    pd.DataFrame(
+        {
+            **{f"Success, {label(t)}": penalties[success_column(t)].map("{:.2f}".format) for t in STYLES},
+            "Classifiers agree": penalties[JUDGE_MEAN].map("{:.2f}".format),
+            **{sym: penalties[c].map("{:.2f}".format) for c, sym in zip(CHANGE_COUNTS, (r"$n_{\text{type}}$", r"$n_{\text{remove}}$", r"$n_{\text{add}}$"))},
+        }
+    )
+    .set_axis([setting_label(*i) for i in penalties.index])
+    .rename_axis("Setting")
+    .to_markdown(disable_numparse=True)
+)
+```
+
+```{python}
+#| label: tbl-type-weight
+#| tbl-cap: 'Effect of the type weight $\gamma$: held-out accuracy of the distance-sensitive models (mean ± standard deviation over repeat means), and adjustment of the real recipes of the other styles toward each target using centroids fit with $\gamma$, judged by independent classifiers that keep $\gamma = 1$'
+weights = type_weight_sensitivity(recipes, STYLES)
+adjustment = weights["adjustment"]
+Markdown(
+    pd.DataFrame(
+        {
+            **{
+                m: weights[(ACCURACY, m)].map("{:.2f}".format) + " ± " + weights[(ACCURACY_SD, m)].map("{:.2f}".format)
+                for m in WEIGHT_SENSITIVE_MODELS
+            },
+            "Success, " + " / ".join(label(t) for t in STYLES): adjustment[[success_column(t) for t in STYLES]].apply(
+                lambda row: " / ".join(f"{v:.2f}" for v in row), axis=1
+            ),
+            "Classifiers agree": adjustment[JUDGE_MEAN].map("{:.2f}".format),
+            **{sym: adjustment[c].map("{:.2f}".format) for c, sym in zip(CHANGE_COUNTS, (r"$n_{\text{type}}$", r"$n_{\text{remove}}$", r"$n_{\text{add}}$"))},
+        }
+    )
+    .set_axis([f"$\\gamma = {w:g}$" for w in weights.index])
+    .T
+    .rename_axis("")
+    .to_markdown(disable_numparse=True)
+)
+```
+
+<!-- TODO(prose): main points of the sensitivity tables (reviewer item 3).
+- tbl-addition-gains: the benefit of adding an ingredient is identical for every recipe lacking it (the loss separates
+  by feature, and every such recipe encodes the ingredient as amount 0, type none). So lambda_add acts as an on/off
+  threshold per (target, ingredient), not a dial: NY fat 1.94, NY sugar 1.27, Sicilian fat 2.67, Sicilian sugar 0.
+  Below the threshold every lean recipe gets it, above it none do. Present lambda_add = 1 as a policy choice, and the
+  user switch E_+ as the real control. (Blended targets lower the benefit, so there the threshold moves with the share.)
+- tbl-penalty-sensitivity: results are stable when lambda_type or lambda_remove (x1/4) or lambda_ratio (x1/4) change.
+  Turning additions off is the biggest effect (NY 0.30, Sicilian 0.45). A strict ratio penalty (x4) hurts New York
+  (0.57). A strict remove penalty (x4) hurts Neapolitan (0.64), mirroring the add story: Neapolitan is reached by
+  dropping fat/sugar.
+- tbl-type-weight (gamma = weight on type columns vs z-scored ratios): accuracy moves by at most ~0.06 (logistic
+  regression most sensitive; SVM best at gamma = 1), so no case to change the default. Key finding: at gamma = 0.5 the
+  adjuster still "succeeds" by its own metric (1.00) but the independent classifiers agree only 0.72, because it reaches
+  the centroid through amounts alone and never changes a type. This is why the independent check matters.
+- Conclusion bullets: these results speak to "Can this information be used in dough formulation development?" -->
+
 ## Conclusion
 
 - Do pizza dough formulations carry enough information to indicate a specific style, in absence of other recipe parameters?
@@ -742,6 +905,7 @@ The application can be found at: <streamlit link>
 | $\mathbf{h}_i$ | One-hot encoding of $t_i$, $\in \{0,1\}^{\lvert\mathcal{T}_i\rvert}$ |
 | $\phi$ | Feature map from a formula to its feature vector (@eq-features) |
 | $\mathbf{x}$ | Feature vector of a formula, $\mathbf{x} = \phi(r) \in \mathbb{R}^d$ |
+| $\gamma$ | Type weight: multiplier on the one-hot type coordinates of $\mathbf{x}$ relative to the standardized ratios; $\gamma = 1$ except in @tbl-type-weight |
 | $d$ | Dimension of the feature space, $5 + \sum_{i \in \mathcal{K}} \lvert\mathcal{T}_i\rvert$ (20 for the current corpus) |
 | $\mathcal{S}$ | Pizza styles: Neapolitan, New York, Sicilian |
 | $s,\ s'$ | Indices over styles in $\mathcal{S}$ |

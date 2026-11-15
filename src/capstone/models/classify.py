@@ -81,6 +81,7 @@ def make_models(
     *,
     include: Sequence[str] | None = None,
     seed: int = CVConfig.seed,
+    type_weight: float = 1.0,
 ) -> dict[str, Pipeline]:
     """Unfitted candidate models, each preprocessor + classifier.
 
@@ -88,6 +89,7 @@ def make_models(
         numeric, categorical: Feature subsets, for ablations (either may be empty).
         include: Model names to keep, in this order; default all.
         seed: Random state for the stochastic models.
+        type_weight: Multiplier on the one-hot type columns (see `build_preprocessor`).
     """
     estimators = _estimators(seed)
     names = list(include) if include is not None else list(estimators)
@@ -95,7 +97,7 @@ def make_models(
     if unknown:
         raise ValueError(f"unknown models: {sorted(unknown)}")
     return {
-        n: Pipeline([(PREP_STEP, build_preprocessor(numeric, categorical)), (CLASSIFIER_STEP, estimators[n])])
+        n: Pipeline([(PREP_STEP, build_preprocessor(numeric, categorical, type_weight)), (CLASSIFIER_STEP, estimators[n])])
         for n in names
     }
 

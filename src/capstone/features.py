@@ -57,19 +57,24 @@ class ImputingOneHotEncoder(TransformerMixin, BaseEstimator):
 # We intentionally z-score because small changes in small ingredients have large impacts
 # A percentage increase in salt/yeast matter far more than percentage increase in flour/water
 def build_preprocessor(
-    numeric: Sequence[Col] = NUMERIC, categorical: Sequence[Col] = CATEGORICAL
+    numeric: Sequence[Col] = NUMERIC,
+    categorical: Sequence[Col] = CATEGORICAL,
+    type_weight: float = 1.0,
 ) -> ColumnTransformer:
     """Z-score the numeric ratios and one-hot encode the ingredient types, imputing
     unstated (UNKNOWN) types from the training data (see `ImputingOneHotEncoder`).
 
-    Either group may be empty, which makes the transformer reusable for ablations.
+    Args:
+        numeric, categorical: Feature groups; either may be empty, for ablations.
+        type_weight: Multiplier on the one-hot type columns, setting how much a type
+            difference counts against a ratio difference in any distance (default 1).
     """
     blocks = []
     if numeric:
         blocks.append((NUM_BLOCK, StandardScaler(), [str(c) for c in numeric]))
     if categorical:
         blocks.append((CAT_BLOCK, ImputingOneHotEncoder(), [str(c) for c in categorical]))
-    return ColumnTransformer(blocks)
+    return ColumnTransformer(blocks, transformer_weights={CAT_BLOCK: type_weight} if categorical else None)
 
 
 def feature_name(col: Col, category: str | None = None) -> str:
@@ -97,6 +102,11 @@ def transform(pipe: Pipeline, X: pd.DataFrame) -> pd.DataFrame:
         index=X.index,
         columns=feature_names(pipe),
     )
+
+
+def type_weight(pipe: Pipeline) -> float:
+    """Multiplier the fitted pipeline applies to its one-hot type columns."""
+    return float((preprocessor(pipe).transformer_weights or {}).get(CAT_BLOCK, 1.0))
 
 
 def scaler_stats(pipe: Pipeline) -> tuple[np.ndarray, np.ndarray]:

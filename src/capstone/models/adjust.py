@@ -47,6 +47,7 @@ from capstone.features import (
     feature_name,
     numeric_bounds,
     scaler_stats,
+    type_weight,
 )
 from capstone.models.centroids import (
     blend_centroid,
@@ -133,13 +134,16 @@ def build_search_space(pipe: Pipeline, reference: pd.DataFrame) -> SearchSpace:
 
 # Get the square distance between encoding and target centroid
 def _cat_distance(space: SearchSpace, centroid: pd.Series) -> np.ndarray:
-    """Squared distance of each type combination's one-hot encoding to the centroid."""
+    """Squared distance of each type combination's one-hot encoding to the centroid.
+    With type weight w, a type's encoding is w times a unit vector e_k, so per column
+    ||w e_k - p||^2 = sum(p^2) + w^2 - 2 w p_k."""
+    w = type_weight(space.pipe)
     total = np.zeros(len(space.combos))
     for j, col in enumerate(CATEGORICAL):
         p = np.array([centroid[feature_name(col, k)] for k in space.levels[col]])
         lookup = dict(zip(space.levels[col], p))
         pv = np.array([lookup[v] for v in space.combos[:, j]])
-        total += (p**2).sum() + 1 - 2 * pv
+        total += (p**2).sum() + w**2 - 2 * w * pv
     return total
 
 

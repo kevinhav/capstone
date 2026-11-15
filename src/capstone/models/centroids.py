@@ -21,15 +21,16 @@ _SUM_TO_ONE_PENALTY: Final = 1e3  # weight of the soft sum-to-one row in estimat
 
 # Pipeline fits on prepped features to calculate centroid per label
 # There's no learned weights here, we're just taking the average for each style (mean, std dev)
-def fit_centroids(X: pd.DataFrame, y: pd.Series) -> Pipeline:
+def fit_centroids(X: pd.DataFrame, y: pd.Series, type_weight: float = 1.0) -> Pipeline:
     """Fit preprocessing + NearestCentroid, giving one centroid per style.
 
     Args:
         X: Recipes with the FEATURES columns.
         y: Style label per recipe.
+        type_weight: Multiplier on the one-hot type columns (see `build_preprocessor`).
     """
     pipe = Pipeline(
-        [(PREP_STEP, build_preprocessor()), (CENTROID_STEP, NearestCentroid())]
+        [(PREP_STEP, build_preprocessor(type_weight=type_weight)), (CENTROID_STEP, NearestCentroid())]
     )
     return pipe.fit(X[FEATURES], y)
 

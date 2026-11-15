@@ -175,3 +175,33 @@ def test_adjustment_evaluation_on_real_recipes(recipes, space):
     assert ((ev[SUCCESS_LO] <= ev[SUCCESS]) & (ev[SUCCESS] <= ev[SUCCESS_HI])).all()
     assert (ev[SUCCESS] >= ev[TARGET_BEFORE]).all()  # adjusting never moves recipes away on balance
     assert ev[judge_column("random forest")].between(0, 1).all()
+
+
+@pytest.mark.parametrize("weight", [0.5, 2.0])
+def test_adjuster_target_term_matches_pipeline_distance_under_type_weight(recipes, weight):
+    from capstone.models import target_distance
+
+    pipe = fit_centroids(recipes, recipes[Col.style], type_weight=weight)
+    space = build_search_space(pipe, recipes)
+    for rid in ["new_york_001", "neapolitan_002", "sicilian_010"]:
+        result = adjust(recipes.loc[rid], "new-york", space)
+        d = target_distance(pipe, result.recipe.to_frame().T, "new-york").iloc[0]
+        assert result.loss.target == pytest.approx(d**2)
+
+
+def test_addition_gain_does_not_depend_on_the_recipe(recipes, space):
+    from capstone.models.sensitivity import GAIN_SPREAD, NET_GAIN, addition_gains
+
+    gains = addition_gains(recipes, space, STYLES)
+    assert (gains[GAIN_SPREAD] < 1e-9).all()
+    assert (gains[NET_GAIN] >= 0).all()
+
+
+def test_penalty_grid_rejects_unknown_fields():
+    from capstone.models.sensitivity import ADDABLE, DEFAULT, penalty_grid
+
+    grid = penalty_grid(("ratio",), (0.5,))
+    assert [s.parameter for s in grid] == [DEFAULT, ADDABLE, "ratio"]
+    assert grid[2].weights.ratio == pytest.approx(LossWeights().ratio * 0.5)
+    with pytest.raises(ValueError):
+        penalty_grid(("not_a_weight",))
