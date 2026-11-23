@@ -485,7 +485,7 @@ PROCESSING_STEPS: Final[Mapping[str, str]] = {
     "Given only as baker's percentages": r"percentage given directly",
     "Preferment split into flour and water": r"split_starter|poolish fold-in",
     "Several flours combined": r"summed|dominant flour",
-    "Type defaulted (unstated in source)": r"^manual \(unspecified",
+    "Type unstated in source (recorded as unknown)": r"^manual \(unspecified",
     "Range or alternative resolved to one value": r"range midpoint|headline value|first-listed",
 }
 

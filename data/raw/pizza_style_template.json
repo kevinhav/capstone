@@ -12,7 +12,7 @@
       "flour_type": {
         "raw": "bread flour, preferably Italian-style \"OO\"",
         "method": "match_alias",
-        "note": "named 'bread flour' but author prefers Italian-style 00; matched literal name, not preference (text says letter-O 'OO', not digit '00', so alias didn't fire on 00 anyway)"
+        "note": "named 'bread flour' but author prefers Italian-style 00; matched literal name, but keep author's preference"
       },
       "water": {
         "raw": "13 ounces water",
@@ -52,7 +52,7 @@
       }
     },
     "flour": 100.0,
-    "flour_type": "bread",
+    "flour_type": "double_zero",
     "water": 65.0,
     "salt": 2.0,
     "yeast": 1.5,

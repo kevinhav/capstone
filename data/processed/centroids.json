@@ -10,9 +10,8 @@
     },
     "category_share": {
       "flour_type": {
-        "double_zero": 0.5833,
+        "double_zero": 0.6667,
         "unknown": 0.25,
-        "bread": 0.0833,
         "all-purpose": 0.0833
       },
       "yeast_type": {
@@ -37,8 +36,8 @@
       "num__fat": -0.89006,
       "num__sugar": -0.442075,
       "cat__flour_type_all-purpose": 0.097619,
-      "cat__flour_type_bread": 0.183333,
-      "cat__flour_type_double_zero": 0.654762,
+      "cat__flour_type_bread": 0.092857,
+      "cat__flour_type_double_zero": 0.745238,
       "cat__flour_type_high-gluten": 0.057143,
       "cat__flour_type_semolina": 0.007143,
       "cat__yeast_type_active-dry": 0.006579,
@@ -94,8 +93,8 @@
       "num__fat": 0.304334,
       "num__sugar": 0.483352,
       "cat__flour_type_all-purpose": 0.065546,
-      "cat__flour_type_bread": 0.576471,
-      "cat__flour_type_double_zero": 0.092437,
+      "cat__flour_type_bread": 0.573109,
+      "cat__flour_type_double_zero": 0.095798,
       "cat__flour_type_high-gluten": 0.262185,
       "cat__flour_type_semolina": 0.003361,
       "cat__yeast_type_active-dry": 0.181115,
