@@ -587,7 +587,7 @@ Below are a few recipes each have notable outliers in their features. The Sicili
 ```{python}
 #| label: tbl-outliers
 #| tbl-cap: "Outlier recipes compared to central tendencies"
-#| OUTLIERS = [
+OUTLIERS = [
     "new_york_011",
     "sicilian_010",
 ]
