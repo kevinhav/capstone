@@ -166,7 +166,7 @@ As mentioned before, dough formulation is primarily encoded in four main feature
 
 We extend the dough formulation to address the ingredient types, as well as possible dough enrichments. For example, the wheat flours used in pizza dough can have significantly different compositions, usually measured by protein content ranging from 10-15%. Thoughtful manufacturers will specify these amounts for each of their products. This and other factors, such as granule size, can influence water absorption, making it an important feature in how the dough formula develops (see @sapirstein2018absorption where water absorption is found to correlate with protein content and particle size).
 
-Similarly, we've allowed for fats as an ingredient, as we found that many formula call for the addition of olive oils, seed oils, or butter. We've included quantities and variables for sugars, including white refined cane sugar, brown sugar, and honey, as we found these were common ingredients as well.
+Similarly, we have allowed for fats as an ingredient, as we found that many formulas call for the addition of olive oils, seed oils, or butter. We have included quantities and variables for sugars, including white refined cane sugar, brown sugar, and honey, as we found these were common ingredients as well.
 
 Yeast variety is also a difficult-to-capture variable. While commercially produced instant and active yeasts are generally comparable across manufacturers, local yeasts are not, as they are specific to the environment's microbiome. These yeasts are usually captured as live cultures of flour and water, which some formula use as a direct ingredient. As such, we allow for specifying the yeast used as a feature.
 
@@ -253,7 +253,7 @@ profile_table(Style.new_york)
 
 ### Sicilian
 
-Sicilian pizza also originated in Italy, however in contrast to Neapolitan styles, it is typically much thicker and breadier, similar to focaccia bread. It is baked in a pan, commonly square or rectangular, and served in slices. Sicilian is not quite as well known in the United States, but we've chosen it as many other popular styles, including Detroit, "Grandma Pie", and Roman are quite similar (although we've limited our curated formula to those explicitly labeled as "Sicilian"). It also provides a point of contrast to the other two styles - Sicilian pizza uses a much thicker dough than either New York or Neapolitan, and is generally a much more approachable style of pizza to the consumer sector as it does not require such extreme baking temperatures or dough handling technique.
+Sicilian pizza also originated in Italy, however in contrast to Neapolitan styles, it is typically much thicker and breadier, similar to focaccia bread. It is baked in a pan, commonly square or rectangular, and served in slices. Sicilian is not quite as well known in the United States, but we have chosen it as many other popular styles, including Detroit, "Grandma Pie", and Roman are quite similar (although we have limited our curated formulas to those explicitly labeled as "Sicilian"). It also provides a point of contrast to the other two styles - Sicilian pizza uses a much thicker dough than either New York or Neapolitan, and is generally a much more approachable style of pizza to the consumer sector as it does not require such extreme baking temperatures or dough handling technique.
 
 ```{python}
 #| label: tbl-profile-sicilian
@@ -266,7 +266,7 @@ profile_table(Style.sicilian)
 
 ### Sourcing Expert Formulas
 
-Labeled pizza formulations are not readily available as structured data. While there are many pizza recipes widely available online, there is no guarantee or assurance of the quality or accuracy of their labeling. Our interest is in fact to classify and optimize such recipes towards a style definition that has wide support from expert pizzaiolo and is evidenced by data.
+Labeled pizza formulations are not readily available as structured data. While there are many pizza recipes widely available online, there is no guarantee or assurance of the quality or accuracy of their labeling. Our interest is in fact to classify and optimize such recipes towards a style definition that has wide support from expert pizzaiolos and is evidenced by data.
 
 As such, we have developed a small, well-structured dataset of expert-curated recipes. By focusing on expert recipes, we can establish clear profiles of each pizza style against which to measure other formulations. 
 
@@ -531,7 +531,7 @@ viz.style_scatter(coords, style, centers);
 
 We trained several classification models on the data to validate the expert labels. We are interested to understand if our expert corpus agrees with itself and the corresponding labels sufficiently, and if there is learnable signal in the data to differentiate between styles. Again we must be clear that these results are based on a small sample set, and the predictive outputs will have wide standard errors. 
 
-We evaluate the classifications of the models and compare to both our affinity scores as well as any clear disagreement on expert labels, indicating an outlier. We use cross validation to reduce the effect of biased sample error for all models and report performance in terms of F1 score. We've included both the affinity score majority and class majority as baselines.
+We evaluate the classifications of the models and compare to both our affinity scores as well as any clear disagreement on expert labels, indicating an outlier. We use cross validation to reduce the effect of biased sample error for all models and report performance in terms of F1 score. We have included both the affinity score majority and class majority as baselines.
 
 
 
@@ -563,7 +563,7 @@ Markdown(
 
 Our models do outperform both class majority base rates as well as the affinity score baseline, indicating that there is real predictive signal in the data. We also see a high degree of congruency between the models, with a few outliers, suggesting that indeed the corpus agrees with its class labeling. The affinity baseline also does quite well compared to the statistical models, implying that it is a reasonable choice for assigning class membership. 
 
-Each model was trained over 20 repeats on five stratified folds to mitigate any single or cluster of recipes from overly influencing any one model. While small-n CV esitmates can be optimistic when fitting is done outisde training folds we avoid this entirely as there is no feature selection or tuning done outside of the cross validation loop, thus avoiding the bias and leakage simultaneously (see @vabalas2019validation and @kapoor2023leakage). We report in terms of the standard deviation over repeats, as the naive standard deviation over folds underestimates the variance of cross-validation estimates as recommended by @bengio2004variance.
+Each model was trained over 20 repeats on five stratified folds to mitigate any single or cluster of recipes from overly influencing any one model. While small-n CV estimates can be optimistic when fitting is done outside training folds we avoid this entirely as there is no feature selection or tuning done outside of the cross validation loop, thus avoiding the bias and leakage simultaneously (see @vabalas2019validation and @kapoor2023leakage). We report in terms of the standard deviation over repeats, as the naive standard deviation over folds underestimates the variance of cross-validation estimates as recommended by @bengio2004variance.
 
 In our testing, all models agreed amongst themselves about 54.9% of the corpus, and with the experts as well about 49%. SVM, Random Forest, and Logistic Regression demonstrated the best performance, with Random Forest the most accurate.
 
@@ -614,7 +614,7 @@ To address this, we introduce an optimization algorithm that attempts to fine-tu
 
 
 
-In developing this algorithm, we've accommodated two additional points we believe to be important to a pizzaiolo, as well as an assumption.
+In developing this algorithm, we have accommodated two additional points we believe to be important to a pizzaiolo, as well as an assumption.
 
 Firstly, a user has a specific environment which is difficult to comprehensively measure; availability of ingredients, altitude, humidity, equipment, and so on. We assume that the user has some starting formulation (or is willing to choose a starting formulation) they are content with, but that they would like to adjust - this initial input formulation is assumed to encode these environment variables to some degree. Under this assumption, the algorithm attempts to shrink the style distance *minimally*, such that much of the author's original recipe is preserved, while still providing new ingredient vectors that are closer to the target style. 
 
@@ -625,7 +625,7 @@ We experimented with different loss values of adding ingredients, which we will 
 
 Other versions of the optimizer had similar issues, biased towards each of the specific styles. Higher costs for ingredient addition were punitive towards Sicilian and New York style adjustments, while higher costs for ingredient removal affected Neapolitan in the same way.
 
-The current version calculates a ratio change of an ingredient from zero, making it much less punitive when adding small amounts of previously excluded ingredients, and adds one as a constant, consistent with swapping or removing ingredients. We've also made an adjustment where, if an ingredient type is not specified, it is not considered a swap for the purposes of the loss function. This type of "cost-of-change" structure is found in @wachter2018counterfactual, presented as a counterfactual explanation.
+The current version calculates a ratio change of an ingredient from zero, making it much less punitive when adding small amounts of previously excluded ingredients, and adds one as a constant, consistent with swapping or removing ingredients. We have also made an adjustment where, if an ingredient type is not specified, it is not considered a swap for the purposes of the loss function. This type of "cost-of-change" structure is found in @wachter2018counterfactual, presented as a counterfactual explanation.
 
 Considering two formula vectors, $\mathbf{x}$ as the original and $\mathbf{x}'$ as the target:
 
