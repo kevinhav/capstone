@@ -113,25 +113,9 @@ def profile_table(s: Style) -> Markdown:
 
 ## Abstract
 
-<!-- TODO(feedback): reviewer items and where they are addressed. Remove these TODO comments before submitting.
-1. Model validation (CV variability, leakage): tbl-cv-results now has per-repeat SD; label leakage fixed in the data
-   (see TODOs in "Processing" and "Classification Models").
-2. Optimization evaluated quantitatively: tbl-adjust-eval (real recipes, out-of-fold independent classifiers).
-3. Sensitivity: tbl-addition-gains, tbl-penalty-sensitivity, tbl-type-weight.
-4. Literature review: still open (formulation/mixture design, counterfactual explanations, small-sample CV, leakage).
--->
+
 
 ## Motivation
-
-### Culinary Optimization
-
-The culinary arts are a domain in which humans have experimented and explored for our entire cultural existence. Raw ingredients are processed through technique and chemistry to create a complex, highly sensual and subjective outcome. We all recognize and appreciate a good meal when we experience it, even though palates and preferences can vary drastically between two diners of the same plate. Restaurants strive for consistency in their dishes, home cooks enjoy improving their skills and their creativity, and diners enjoy the results.
-
-Of interest then, is finding ways to enforce or at least improve the consistency of a particular outcome. Food science is a growing field in which this consistency or optimization of techniques and dishes are explored. A common experiment is AB testing, where the same or at least very similar ingredients are subjected to several different techniques or processes, and some goal or outcome (usually qualitative and subjective) is then measured and compared. This can be effective, however requires much trial and error as well as a broad sample of testers to achieve any kind of reasonable claim.
-
-<!-- REF [@kochanski2017dessert] Google tuned cookie recipes by Bayesian optimization, with real bakes and taste-tester ratings as the objective (an example of costly trial-and-error search). https://research.google/pubs/bayesian-optimization-for-a-better-dessert/ -->
-
-This leads us to consider; how might we apply statistical analysis and machine learning techniques to expedite or improve such a process?
 
 ### Pilot Study in Pizza Dough Formulations
 
@@ -143,56 +127,29 @@ One sub-domain that circumvents some of these issues is baking. Many baking reci
 
 Consider then a baker who wishes to develop a new baked good. The baker likely starts with some idea of the type of product; a baguette, a homestyle loaf, or an Italian boule. The baker then relies on their expertise, knowledge, and experience with the target product to develop an initial formula of baker's percentages they believe will approximate the target style. The recipe is prototyped, evaluated, and iterated until the baker is happy with the result. This process, although quite enjoyable, can be time-consuming and expensive, which is undesirable in a commercial and sometimes residential environment.
 
-We would like to explore the application of data science and machine learning towards expediting this process. Unfortunately, due to the large number of possible leavened and unleavened products, this would require an expansive corpus of detailed, labeled data encoding not only the ingredients, but a myriad of other factors, including kneading time, humidity, fermentation activity, and many other variables that are difficult to control. At this time, such a corpus is not available.
+We would like to explore the application of data science and machine learning towards expediting this process. Unfortunately a well-labeled and structured corpus is not available to our knowledge. While our scope does not allow for the development of such a corpus, we would like to motivate the further study and exploration of this topic. As such, we have chosen to perform a pilot study of a statistical approach to the analysis, classification, and optimization of pizza dough formulations.
 
-While our scope does not allow for the development of such a corpus, we would like to motivate the further study and exploration of this topic. As such, we have chosen to perform a pilot study of a statistical approach to the analysis, classification, and optimization of pizza dough formulations.
+### Market Interest
 
-### Growing Pizzaiolos & Equipment Manufacturers
-
-#### Consumer Sector Growth
-
-Pizza needs no introduction; it is one of the most widely recognized and popular foods in the world, with many distinct regional variations, a small and economical ingredient list, and relevancy at all levels of the culinary spectrum. It is made in both home kitchens as an economical dinner option, as fast food as a scalable though competitive venture, and listed on fine dining menus as a canvas for exotic ingredients and the chef's vision.
-
-In particular, consumer interest in at-home pizza making has grown rapidly. Manufacturers specializing in dedicated pizza equipment, such as Ooni and Gozney, have seen remarkable market growth. Gozney Group Limited's filed UK accounts show turnover rising from £12.9M in the financial year ended 31 March 2021 to £60.7M in the year ended 31 March 2024 - four consecutive years of compounding growth, at +111%, +62%, and +37% respectively [@gozney2024accounts]. Its closest competitor, Ooni, is reported to have reached roughly $200M in annual revenue at its peak, easing to approximately $194M in 2023 as pandemic-era demand normalized [@ooni2023accounts].
+Consumer interest in at-home pizza making has grown rapidly. Manufacturers specializing in dedicated pizza equipment, such as Ooni and Gozney, have seen remarkable market growth. Gozney Group Limited's filed UK accounts show turnover rising from £12.9M in the financial year ended 31 March 2021 to £60.7M in the year ended 31 March 2024 - four consecutive years of compounding growth, at +111%, +62%, and +37% respectively [@gozney2024accounts]. Its closest competitor, Ooni, is reported to have reached roughly $200M in annual revenue at its peak, easing to approximately $194M in 2023 as pandemic-era demand normalized [@ooni2023accounts].
 
 Interest in recipes for specific styles has also increased. Among the rising US pizza dough queries of the five years to September 2026, four of the fifteen highest-volume are Neapolitan-specific: "neapolitan pizza dough recipe" and "neapolitan pizza" both carry a search-interest index of 24, and "neapolitan pizza dough" and "neapolitan pizza recipe" both carry 23 [@googletrends2026pizzadough]. This indicates real consumer interest in the formulation of specific pizza dough styles.
 
 ![The fifteen highest-volume rising US pizza dough search queries, September 2021 - September 2026](../../figures/pizza_dough_rising_queries_light.svg){fig-align="center" width="90%"}
 
-As such, we believe there is interest, both for the consumer and the equipment suppliers, in tooling and statistical analysis that can save time and educate users in their pursuits of a particular expression of pizza dough styles, that may be a well established culinary style or something in between.
+In the commercial sector, independent restaurants have also reported challenging environmental factors in their operations driven by increased expenses and narrowing margins. A survey conducted in 2025 by Restaurant65 reported 91% of surveyed restaurants have seen increased food costs [@pmq2026failure]. In such a saturated market, the ability to differentiate and compete is critical, and the opportunity cost of a failed product can be high when margins are very thin.
 
-### Commercial Sector Challenges
+### Who This Serves
 
-In the commercial sector, independent pizza restaurants make up more than half of the 75,000 pizza restaurants in the United States, and this sector is growing - reports indicate that independent pizza sees a 20% year-over-year increase in orders nationwide.
+This study is intended to support the consumer who cooks and develops recipes at home. This can be a challenging environment to achieve consistency, as it generally involves many factors that are either uncontrollable or too resource intensive to be feasible, especially from user to user. As such, we propose that dough formulation is a valuable tool to achieve a particular outcome, especially for home cooks.
 
-<!-- TODO(ref): the "75,000 restaurants" and "20% YoY" figures need a current source; check the free full 2026 Pizza Power Report. https://www.pmq.com/gated-download/pizza-power-report-2026/ -->
-
-
-Independent restaurants have also reported challenging environmental factors in their operations driven by increased expenses and narrowing margins. A survey conducted in 2025 by Restaurant65 reported 91% of surveyed restaurants have seen increased food costs [@pmq2026failure]. In such a saturated market, the ability to differentiate and compete is critical, and the opportunity cost of a failed product can be high; margins are very thin.
-
-### A Framework for Consumer and Commercial Sectors
-
-This framework in particular supports the consumer who cooks and develops recipes at home. This can be a challenging environment to achieve consistency, as it generally involves many factors that are either uncontrollable or too resource intensive to be feasible. 
-
-Some examples of such variables include:
-
-- Oven temperatures & thermostat accuracy
-- Differences in oven models and designs, including gas versus electric
-- Use of imprecise volume measurements
-- Inconsistency in consumer products, such as protein content or granule size of flour
-- Availability of ingredients for regional styles 
-- Limited resources for large volumes of samples
-- Environmental differences, including altitude and humidity
-
-These types of variables are difficult to control, especially from user to user. As such, we propose that dough formulation is the best tool available to a home cook to achieve a particular outcome. As the data for these factors are not available, we can attempt to normalize them and provide the means for a user to fine-tune a formula to their specific environmental factors.
-
-This is not to say the implications are limited to home users. Commercial users may find it useful for product development, no-cost experimentation, and scaling to their particular operations. For example, a pizzeria that specializes in Neapolitan pizzas made with a particular local flour may wish to explore a New York style offering. They would likely wish to differentiate their products sufficiently, while still using the same local flour. Having the ability to take their base recipe and adjust towards a new distinct offering, while keeping their preferred ingredient list, can reduce experimentation cycles and material costs.
+We believe this study will also be useful to commercial users for product development, no-cost experimentation, and scaling to their particular operations. For example, a pizzeria that specializes in Neapolitan pizzas made with a particular local flour may wish to explore a New York style offering. They would likely wish to differentiate their products sufficiently, while still using the same local flour. Having the ability to take their base recipe and adjust towards a new distinct offering, while keeping their preferred ingredient list, can reduce experimentation cycles and material costs.
 
 In short, we expect that our methods could be useful to a wide range of formula developers across sectors.
 
 ### Objectives and Contributions
 
-Our goal is to answer two connected questions in the context of three popular pizza styles; Neapolitan, New York and Siciliian
+Our goal is to answer two connected questions in the context of three popular pizza styles; Neapolitan, New York and Sicilian
 
 1. Do dough formulas, independent of process details (fermentation, shaping, and baking), carry enough information to tell the three styles apart?
 2. If so, can the signal be used to move an existing formula towards a target style, or blend of styles, while changing as little of the original formula as possible?
@@ -276,7 +233,6 @@ We describe the styles below, informed both by our data and domain knowledge.
 
 Neapolitan is the most clearly defined style of pizza. Originating from Naples, Italy, it is characterized by a soft, pillowy, unenriched dough. Usually smaller than other styles, the base of the crust is thin, with a highly aerated perimeter. Neapolitan pizza is defined very clearly by the Associazione Verace Pizza Napoletana (AVPN) Internal Regulations, however in keeping with other styles, this was not used as a definitive centroid (although it is one of the recipes). Neapolitan pizzas are typically baked in extremely hot ovens, fueled by hardwoods, and charring on the perimeter is expected and desired (see @eu2010pizzanapoletana).
 
-<!-- REF [@eu2010pizzanapoletana] EU legal definition of Pizza Napoletana (TSG): flour 11-12.5% protein, diameter at most 35 cm, rim 1-2 cm. https://eur-lex.europa.eu/eli/reg/2010/97/oj -->
 
 
 ```{python}
@@ -369,8 +325,6 @@ Markdown(processing_counts(provenance, style).rename(columns=label).rename_axis(
 
 Our final dataset is small and curated with reasonable class representation. We would encourage further development of this dataset and be interested in the results.
 
-<!-- REF [@kapoor2023leakage] Leakage, including duplicates shared by train and test sets, affects at least 294 papers in 17 fields. https://doi.org/10.1016/j.patter.2023.100804 -->
-
 ```{python}
 #| label: tbl-style-counts
 #| tbl-cap: "Processed recipes per style"
@@ -457,8 +411,6 @@ Markdown(
 ```
 
 **Ingredient types.** Each type $t_i$ is one-hot encoded over the known types $\mathcal{T}_i \setminus \{\text{unknown}\}$ as $\mathbf{h}_i \in [0,1]^{\lvert\mathcal{T}_i\rvert - 1}$: a 1 in the position of $t_i$ and 0 elsewhere. A type $t_i = \text{unknown}$ is encoded as the share of each known type among the training recipes that use the ingredient, so $\text{unknown}$ never becomes a level of its own. With $\mathcal{T}_{\text{flour}}$ ordered as listed above, a bread flour formula has $\mathbf{h}_{\text{flour}} = (0, 1, 0, 0, 0)$. For fat and sugar, $\text{none}$ is a level of its own, so an absent enrichment is encoded explicitly rather than as all zeros.
-
-<!-- REF [@gower1971similarity] Standard distance for mixed numeric and categorical features; later work notes it tends to overweight categoricals (cf. type weight gamma, tbl-type-weight). https://doi.org/10.2307/2528823 -->
 
 **Feature vector.** Stacking the standardized ratios and the type encodings gives the feature vector:
 
@@ -611,10 +563,9 @@ Markdown(
 
 Our models do outperform both class majority base rates as well as the affinity score baseline, indicating that there is real predictive signal in the data. We also see a high degree of congruency between the models, with a few outliers, suggesting that indeed the corpus agrees with its class labeling. The affinity baseline also does quite well compared to the statistical models, implying that it is a reasonable choice for assigning class membership. 
 
-Each model was trained over 20 repeats on five stratified folds to mitigate any single or cluster of recipes from overly influencing any one model. While small-n CV esitmates can be optimistic when fitting is done outisde training folds we avoid this entirely as there is no feature selection or tuning done outside of the cross validation loop, thus avoiding the bias and leakage simultaneously (see @vabalas2019validation and @kapoor2023leakage). We report in terms of the standard deviation over repeats, as the naive standard deviation over folds underestimates the variance of cross-validation estimates as recommended by @bengio2004variance. With both of these 
+Each model was trained over 20 repeats on five stratified folds to mitigate any single or cluster of recipes from overly influencing any one model. While small-n CV esitmates can be optimistic when fitting is done outisde training folds we avoid this entirely as there is no feature selection or tuning done outside of the cross validation loop, thus avoiding the bias and leakage simultaneously (see @vabalas2019validation and @kapoor2023leakage). We report in terms of the standard deviation over repeats, as the naive standard deviation over folds underestimates the variance of cross-validation estimates as recommended by @bengio2004variance.
 
-
-In our testing, all models agreed amongst themselves about 54.9% of the corpus, and with the experts as well about 49%. Our best models are closely grouped, with SVM, Random Forest, and Logistic Regression demonstrating the best performance.
+In our testing, all models agreed amongst themselves about 54.9% of the corpus, and with the experts as well about 49%. SVM, Random Forest, and Logistic Regression demonstrated the best performance, with Random Forest the most accurate.
 
 ```{python}
 #| label: fig-confusion
@@ -629,18 +580,23 @@ viz.confusion_matrices({
 ```
 
 
-Before moving on, we'd like to point out a few outlier formulas that models typically disagree on. 
 
-These recipes each have notable outliers in their features. The Sicilian has traded some of the typical water amount for additional oil as well as specifying Semolina flour, which, after reviewing the base recipe, is likely a limitation of our conversion methodology - the recipe specifies a mix of flours, but we are taking the majority as the `flour_type` class. This would also explain the different ratios of water and fat, as semolina flour has a different absorption rate than bread flour.  The New York style goes without both sugar and fat, which are usually present in these styles, and appears to be a true outlier of the style.
+Below are a few recipes each have notable outliers in their features. The Sicilian has traded some of the typical water amount for additional oil as well as specifying Semolina flour, which, after reviewing the base recipe, is likely a limitation of our conversion methodology - the recipe specifies a mix of flours, but we are taking the majority as the `flour_type` class. This would also explain the different ratios of water and fat, as semolina flour has a different absorption rate than bread flour.  The New York style goes without both sugar and fat, which are usually present in these styles, and appears to be a true outlier of the style. These both were classified correctly only 5% and 16% for the New York and Sicilian, respectively.
 
 
 ```{python}
 #| label: tbl-outliers
-#| tbl-cap: "The two recipes every model misclassified, next to each style's typical recipe (median baker's percentage, most common type)"
-OUTLIERS = ["new_york_011", "sicilian_010",]
+#| tbl-cap: "Outlier recipes compared to central tendencies"
+#| OUTLIERS = [
+    "new_york_011",
+    "sicilian_010",
+]
 Markdown(
     pd.concat(
-        [recipes.loc[OUTLIERS, INGREDIENT_ORDER].T, typical_recipes(recipes).rename(columns=lambda s: f"Typical {label(s)}")],
+        [
+            recipes.loc[OUTLIERS, INGREDIENT_ORDER].T,
+            typical_recipes(recipes).rename(columns=lambda s: f"Typical {label(s)}"),
+        ],
         axis=1,
     )
     .map(lambda v: f"{v:.2f}" if isinstance(v, float) else label(v))
@@ -669,7 +625,7 @@ We experimented with different loss values of adding ingredients, which we will 
 
 Other versions of the optimizer had similar issues, biased towards each of the specific styles. Higher costs for ingredient addition were punitive towards Sicilian and New York style adjustments, while higher costs for ingredient removal affected Neapolitan in the same way.
 
-The current version calculates a ratio change of an ingredient from zero, making it much when adding small amounts of previously excluded ingredients, and adds one as a constant, consistent with swapping or removing ingredients. We've also made an adjustment where, if an ingredient type is not specified, it is not considered a swap for the purposes of the loss function. This type of "cost-of-change" structure is found in @wachter2018counterfactual, presented as a counterfactual explanation.
+The current version calculates a ratio change of an ingredient from zero, making it much less punitive when adding small amounts of previously excluded ingredients, and adds one as a constant, consistent with swapping or removing ingredients. We've also made an adjustment where, if an ingredient type is not specified, it is not considered a swap for the purposes of the loss function. This type of "cost-of-change" structure is found in @wachter2018counterfactual, presented as a counterfactual explanation.
 
 Considering two formula vectors, $\mathbf{x}$ as the original and $\mathbf{x}'$ as the target:
 
@@ -702,7 +658,7 @@ $$
 C(r' ; r) = \lambda_{\text{ratio}} \Delta_{\text{ratio}} + \lambda_{\text{type}} n_{\text{type}} + \lambda_{\text{remove}} n_{\text{remove}} + \lambda_{\text{add}} n_{\text{add}}
 $$ {#eq-change-cost}
 
-Finally, our adjusted recipe $r^{*}$ is the minimum value of the combined distance to target and cost of any changed ingredients.
+Finally, our adjusted recipe $r^{*}$ is the recipe that minimizes the cost of ingredient changes and proportions.
 $$
 r^{*} = \operatorname*{arg\,min}_{r'} \Big[ \underbrace{\lambda_{\text{target}} \lVert \mathbf{x}' - \tilde{\mathbf{c}} \rVert^2}_{\text{distance to target}} + \underbrace{C(r' ; r)}_{\text{cost of change}} \Big]
 \quad \text{subject to} \quad \ell_i \le p'_i \le u_i, \quad \mathcal{E}(r') \setminus \mathcal{E}(r) \subseteq \mathcal{E}_{+}
@@ -710,7 +666,7 @@ $$ {#eq-optimization}
 
 This approach allows the target to be any point in feature space, the main implication being that a pizzaiolo could specify some blend of styles and adjust some recipe towards some point between their centroids. 
 
-We demonstrate this movement again in the first two principal component space to make concrete.
+We demonstrate this movement again in the first two principal component space to make concrete. @fig-adjust-pca shows an adjustment of one recipe to another.
 
 ```{python}
 #| label: fig-adjust-pca
@@ -723,7 +679,7 @@ fig = viz.style_scatter(coords, style, centers, alpha=0.3)
 viz.adjustment_arrows(fig.axes[0], coords.loc[farthest], adjusted_coords, style);
 ```
 
-As an example, applying this adjustment towards the Neapolitan centroid across the corpus gives us the below changes in formulation:
+As an example, @tbl-adjust-change shows how the recipes tend to change when applying an adjustment towards the Neapolitan centroid across the corpus.
 
 ```{python}
 #| label: tbl-adjust-change
@@ -749,9 +705,9 @@ As one might expect, with no ingredient change limitations, it is simple to adju
 
 However, we do not expect most users to look to target an exact style centroid, but rather to adjust a recipe directionally towards a style or blend of styles. A user with a Neapolitan formula they enjoy may want to adjust towards New York style to accommodate a baking environment with a lower maximum oven temperature. In this scenario, it makes sense to move some distance towards New York style, but not all the way to the centroid; a 60 / 40 blend, as an example. The algorithm allows this, and this is considered one of the main use cases of the accompanying application.
 
-<!-- REF [@markowitz2020baking] Precedent for a blended target: they designed and baked a "breakie" the model rated about 50% cookie, 50% bread. https://cloud.google.com/blog/topics/developers-practitioners/baking-recipes-made-ai -->
-
 Of course in practical terms, these are theoretical, untested formula that would require experts to mix, ferment, shape, bake, and classify to be of real use. As these adjusted recipes are within the same statistical ranges as similar recipes of their target class, we are optimistic that they will produce good results, and would be interested to see curious readers experimenting with these doughs.
+
+To evaluate the adjustment quantitatively, we adjusted every real recipe of the other two styles toward each target style, 80 adjustments in total (@tbl-adjust-eval). Before adjustment, only 9–14% of these recipes were already nearest the target centroid; after adjustment, all of them were. Because the adjuster explicitly minimizes distance to the target centroid, this result is expected by construction, so we also passed each adjusted recipe to independent classifiers fit out of fold. These agreed with the target style for 97–100% of adjustments toward Neapolitan and Sicilian, and 78–100% toward New York, with the random forest the least convinced. Distance to the target centroid fell from roughly 3.0 to between 0.9 and 1.4. The adjusted recipes also sit no farther from their nearest real recipe of the target style (1.0–1.8) than real recipes of that style sit from each other (1.6–2.2). This suggests the adjuster moves formulas into the region occupied by real recipes rather than to unrealistic points between them. The changes reflect each style's profile: adjusting toward Neapolitan removed about one enrichment and swapped about one ingredient type on average, with no additions, while adjusting toward New York added an average of 1.3 enrichments and removed none.
 
 ```{python}
 #| label: tbl-adjust-eval
@@ -779,6 +735,8 @@ Markdown(
 )
 ```
 
+@tbl-addition-gains shows how much adding each enrichment reduces the adjuster's loss, before the fixed cost $\lambda_{\text{add}}$ is applied. The reduction is identical for every recipe lacking the enrichment, so the decision is all-or-nothing: an enrichment is added to every such recipe when $\lambda_{\text{add}}$ is below its gain, and to none otherwise. The largest gain is 2.67, for adding fat when targeting Sicilian, which is the 2.7-unit ceiling noted above. Adding fat or sugar toward New York gains 1.94 and 1.27 respectively, while adding either toward Neapolitan gains nothing. This explains the behavior of earlier versions: any $\lambda_{\text{add}}$ above 1.27 stops sugar being added toward New York, and any above 2.67 prevents additions entirely, effectively locking the enriched styles out of reach.
+
 ```{python}
 #| label: tbl-addition-gains
 #| tbl-cap: 'Reduction in the adjuster''s loss from adding each enrichment, before the fixed cost $\lambda_{\text{add}}$, for the real recipes of the other styles that lack it (count in parentheses). The reduction is the same for every such recipe, so an enrichment is added to all of them when $\lambda_{\text{add}}$ is below it and to none otherwise'
@@ -792,6 +750,8 @@ Markdown(
     .to_markdown(disable_numparse=True)
 )
 ```
+
+To test sensitivity to the change weights, we scaled each by 1/4 or 4 in turn, and separately disabled additions altogether (@tbl-penalty-sensitivity). Adjustment toward Neapolitan succeeded under every setting, consistent with it being reachable mostly through removals and ratio changes. The enriched styles were far more sensitive: with additions disabled, success fell to 30% toward New York and 48% toward Sicilian, and quadrupling $\lambda_{\text{ratio}}$ reduced success toward New York to 48%, indicating that New York formulas typically require larger ratio changes. Raising the type or removal penalties left nearest-centroid success unchanged but suppressed those changes entirely, and agreement from the independent classifiers fell from 0.96 to 0.83 and 0.81 respectively. In other words, a formula can reach the nearest centroid without swapping types or removing enrichments, but the result is less convincingly of the target style to models that weigh those features differently.
 
 ```{python}
 #| label: tbl-penalty-sensitivity
@@ -827,6 +787,8 @@ Markdown(
 )
 ```
 
+Finally, the type weight $\gamma$ sets how much a difference in ingredient type counts against a difference in ratios (@tbl-type-weight). Halving $\gamma$ lowered held-out accuracy for most distance-sensitive models (logistic regression from 0.74 to 0.68), while doubling it improved the affinity baseline from 0.67 to 0.72, a difference of about one repeat standard deviation. For adjustment, a higher $\gamma$ produced recipes the independent classifiers agreed with more often (0.71 at $\gamma = 0.5$, 0.96 at $\gamma = 1$, 0.99 at $\gamma = 2$), but only by swapping more ingredient types: from none at $\gamma = 0.5$ to 0.89 per recipe at $\gamma = 2$. This is a direct trade-off between how convincingly a formula reaches its target and how much of the baker's original ingredient list is preserved. We retain $\gamma = 1$ as a balance between the two; choosing $\gamma$ from these results would amount to tuning on the full corpus.
+
 ```{python}
 #| label: tbl-type-weight
 #| tbl-cap: 'Effect of the type weight $\gamma$: held-out accuracy of the distance-sensitive models (mean ± standard deviation over repeat means), and adjustment of the real recipes of the other styles toward each target using centroids fit with $\gamma$, judged by independent classifiers that keep $\gamma = 1$'
@@ -855,7 +817,7 @@ Markdown(
 
 ## Conclusion
 
-We set out to explore whether pizza dough formulations, expressed as baker's percentages and ingredient types, carry enough information to indicate a particular style in the absence of other recipe parameters. Our results suggest they do, though with clear limits. Using a small expert-curated corpus of 40 formulas, our centroid affinity baseline placed 31 of 40 recipes (78%) nearest to the centroid of their own labeled style, and reached a held-out accuracy of 0.67 under repeated cross-validation. This is well above the majority-class baseline of 0.43, and comparable to the supervised models we trained, the best of which (a random forest) reached 0.83. That a simple distance to a style centroid performs adequately compared to more sophisticated models, indicating that while much of the signal is in the formula itself, more sophisticated models can capture the interaction effects. These results are reported in terms of the expert labels, so we do find a general consensus and alignment. As such, we believe the centroids are specific enough to serve as useful targets, and our optimization framework offers a means for a home or commercial baker to move an existing formula towards a target style while preserving their own ingredients and environment. We stress again that these results come from a small sample and should be read as a pilot study; a larger and more varied corpus would be needed to confirm them, and we would encourage its further development.
+We set out to explore whether pizza dough formulations, expressed as baker's percentages and ingredient types, carry enough information to indicate a particular style in the absence of other recipe parameters. Our results suggest they do, though with clear limits. Using a small expert-curated corpus of 40 formulas, our centroid affinity baseline placed 31 of 40 recipes (78%) nearest to the centroid of their own labeled style, and reached a held-out accuracy of 0.67 under repeated cross-validation. This is well above the majority-class baseline of 0.43, and comparable to the supervised models we trained, the best of which (a random forest) reached 0.83. A simple distance to a style centroid performs adequately compared to more sophisticated models, indicating that while much of the signal is in the formula itself, more sophisticated models can capture the interaction effects. These results are reported in terms of the expert labels, so we do find a general consensus and alignment. As such, we believe the centroids are specific enough to serve as useful targets, and our optimization framework offers a means for a home or commercial baker to move an existing formula towards a target style while preserving their own ingredients and environment. We stress again that these results come from a small sample and should be read as a pilot study; a larger and more varied corpus would be needed to confirm them, and we would encourage its further development.
 
 ## Resources {.appendix}
 
